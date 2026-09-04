@@ -90,6 +90,16 @@ android {
         register("gplay")
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { test ->
+                test.maxHeapSize = "2g"
+                test.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/public")
+            }
+        }
+    }
+
     sourceSets {
         getByName("main").java.directories.add("src/main/kotlin")
     }
@@ -155,4 +165,9 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
     detektPlugins(libs.compose.detekt)
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16")
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.test.ext:junit:1.2.1")
 }
