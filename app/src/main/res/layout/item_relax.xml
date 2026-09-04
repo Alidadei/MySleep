@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/activity_margin"
+    android:paddingTop="@dimen/medium_margin"
+    android:paddingEnd="@dimen/activity_margin"
+    android:paddingBottom="@dimen/medium_margin">
+
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/relax_item_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/bigger_text_size" />
+
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/relax_item_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tiny_margin"
+        android:textSize="@dimen/smaller_text_size" />
+
+</LinearLayout>

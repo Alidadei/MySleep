@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_launcher_name">Light Alarm</string>
+    <string name="time_zone">Time zone</string>
+    <string name="vibrate">Vibrate</string>
+    <string name="no_days_selected">No days selected</string>
+    <string name="clock">Clock</string>
+    <string name="timer">Timer</string>
+    <string name="stopwatch">Stopwatch</string>
+    <string name="start_stopwatch">Start stopwatch</string>
+    <string name="lap">Lap</string>
+    <string name="stopwatch_stopped">Stopwatch has been stopped</string>
+    <string name="timer_stopped">Timer has been stopped</string>
+    <string name="max_reminder_duration">Max reminder duration</string>
+    <string name="time_expired">Time expired</string>
+    <string name="clock_and_date">Clock and date</string>
+    <string name="use_text_shadow">Use text shadow</string>
+    <string name="swipe_right_to_dismiss">Swipe right to Dismiss, or left to Snooze.</string>
+    <string name="sort_by_creation_order">Creation order</string>
+    <string name="sort_by_alarm_time">Alarm time</string>
+    <string name="sort_by_timer_duration">Timer duration</string>
+    <string name="sort_by_day_and_alarm_time">Day and Alarm time</string>
+    <string name="analogue_clock">Analogue clock</string>
+    <string name="digital_clock">Digital clock</string>
+    <string name="alarm_dismissed">Alarm dismissed</string>
+    <string name="select_timer_to_dismiss">Select timer to dismiss</string>
+    <string name="select_alarm_to_dismiss">Select alarm to dismiss</string>
+    <string name="alarm_created">Alarm created</string>
+    <string name="alarm_snoozed">Alarm snoozed by %s</string>
+    <string name="no_alarms_found">No alarms found</string>
+    <string name="add_alarm">Add alarm</string>
+    <string name="no_timers_found">No timers found</string>
+    <string name="add_timer">Add timer</string>
+    <string name="upcoming_alarm">Upcoming alarm</string>
+    <string name="not_scheduled">Not scheduled</string>
+    <string name="missed_alarm">Missed alarm</string>
+    <string name="replaced_by_another_alarm">Replaced by another alarm</string>
+    <string name="alarm_timed_out">Alarm timed out</string>
+
+    <!-- Timer -->
+    <string name="timers_notification_msg">Timers are running</string>
+    <string name="timer_single_notification_label_msg">Timer for %s is running</string>
+    <string name="new_timer">New Timer</string>
+
+    <plurals name="timer_notification_msg">
+        <item quantity="one">%d timer is running</item>
+        <item quantity="other">%d timers are running</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="clock_tab">Clock tab</string>
+    <string name="alarm_tab">Alarm tab</string>
+    <string name="stopwatch_tab">Stopwatch tab</string>
+    <string name="timer_tab">Timer tab</string>
+    <string name="show_seconds">Show seconds</string>
+    <string name="increase_volume_gradually">Increase volume gradually</string>
+    <string name="settings_import_data">Import alarms and timers</string>
+    <string name="settings_export_data">Export alarms and timers</string>
+
+    <!-- Light wake-up -->
+    <string name="torch_on_alarm">Flashlight when ringing</string>
+    <string name="light_only_wake">Light only (no sound)</string>
+    <string name="sunrise_fade_in">Sunrise fade-in</string>
+    <string name="sunrise_fade_off">Off</string>
+    <string name="sunrise_fade_minutes">Fade in %d min before</string>
+    <string name="sunrise_service_note">Sunrise light fade-in running</string>
+
+    <!-- Sleep report -->
+    <string name="sleep_report">Sleep report</string>
+    <string name="sleep_report_note">Recorded from your actual alarm dismissals</string>
+    <string name="sleep_report_empty">No wake-up records yet. Open the report again after your first alarm.</string>
+    <string name="sleep_report_summary_fmt">Last %1$d wake-ups · on-time %2$d%% · avg oversleep %3$d min</string>
+    <string name="sleep_report_avg_wake_fmt">Average wake-up time: %s</string>
+    <string name="sleep_record_row_fmt">%1$s · %2$s · alarm %3$s · up at %4$s · +%5$d min %6$s</string>
+    <string name="sleep_record_snoozed">(snoozed)</string>
+
+    <!-- Bedtime relax -->
+    <string name="relax_bedtime">Bedtime relax</string>
+    <string name="relax_picks_label">Curated picks for falling asleep</string>
+    <string name="relax_custom_label">My favorites</string>
+    <string name="relax_empty_custom">No favorites yet. Add a novel, blog or music link you like.</string>
+    <string name="relax_add_favorite">Add favorite</string>
+    <string name="relax_title_hint">Title</string>
+    <string name="relax_url_hint">URL</string>
+    <string name="relax_delete_confirm">Remove this favorite?</string>
+    <string name="relax_remove">Remove</string>
+    <string name="relax_invalid_url">Invalid URL or no app to open it</string>
+
+    <!-- FAQ -->
+    <string name="faq_1_title">How can I change lap sorting at the stopwatch tab?</string>
+    <string name="faq_1_text">Just click on any of the columns, that will make the laps be sorted by the given column. With additional clicks you can toggle between ascending and descending sorting.</string>
+    <!--
+        Haven't found some strings? There's more at
+        https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
+    -->
+
+</resources>
