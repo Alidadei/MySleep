@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_launcher_name">Light Alarm</string>
+    <string name="app_launcher_name">Sleep Station</string>
     <string name="time_zone">Time zone</string>
     <string name="vibrate">Vibrate</string>
     <string name="no_days_selected">No days selected</string>

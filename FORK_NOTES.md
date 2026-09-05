@@ -1,4 +1,4 @@
-# 光闹钟 Light Alarm · 改造说明
+# 睡眠站台 Sleep Station · 改造说明
 
 基于 **Fossify Clock**（GPL-3.0，https://github.com/FossifyOrg/Clock）二次开发，
 亮灯逻辑参考 **Flashy Alarm**（GPL-3.0，https://github.com/yahyatinani/flashy-alarm）。
@@ -39,5 +39,11 @@
 新建 `sleep_records` 表；旧版本逐级 `ALTER TABLE`，不丢数据。
 
 ## 构建
-Android Studio 直接打开本目录即可（minSdk 26）。应用名：光闹钟（Light Alarm）。
+Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠站台（Sleep Station）。
 包名保持 `org.fossify.clock`，如需独立包名请全局重构后再上架。
+
+## 已知上游兼容问题（已修复）
+- commons 6.1.6 的 `Context.getSelectedDaysString` 会把 `getStringArray().toList()`
+  （`Arrays$ArrayList`）强转为 `java.util.ArrayList`，闹钟列表一渲染必崩。
+  已在 `extensions/Context.kt` 用 `getSelectedDaysStringSafe` 替代，
+  并有 Robolectric 回归测试（`LaunchSmokeTest`）覆盖列表绑定。

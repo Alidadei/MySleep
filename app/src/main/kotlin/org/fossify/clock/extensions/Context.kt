@@ -591,6 +591,27 @@ fun Context.checkAlarmsWithDeletedSoundUri(uri: String) {
 
 fun Context.rotateWeekdays(days: List<Int>) = days.rotateLeft(config.firstDayOfWeek - 1)
 
+/**
+ * Crash-safe replacement for commons' getSelectedDaysString, which in commons 6.1.6
+ * casts getStringArray().toList() (an Arrays$ArrayList) to java.util.ArrayList and
+ * always throws ClassCastException when the alarm list is rendered.
+ */
+fun Context.getSelectedDaysStringSafe(days: Int): String {
+    val weekDays = arrayListOf(1, 2, 4, 8, 16, 32, 64) // MON..SUN bits
+    val dayLetters = resources
+        .getStringArray(org.fossify.commons.R.array.week_day_letters)
+        .toCollection(ArrayList())
+
+    if (config.isSundayFirst) {
+        weekDays.add(0, weekDays.removeAt(weekDays.size - 1))
+        dayLetters.add(0, dayLetters.removeAt(dayLetters.size - 1))
+    }
+
+    return weekDays.mapIndexed { index, bit ->
+        if (days and bit != 0) "${dayLetters[index]} " else ""
+    }.joinToString("").trim()
+}
+
 fun Context.firstDayOrder(bitMask: Int): Int {
     if (bitMask == TODAY_BIT) return -2
     if (bitMask == TOMORROW_BIT) return -1
