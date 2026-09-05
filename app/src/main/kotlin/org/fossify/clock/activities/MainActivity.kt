@@ -1,10 +1,14 @@
 package org.fossify.clock.activities
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.graphics.drawable.Icon
 import android.graphics.drawable.LayerDrawable
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.core.graphics.drawable.toDrawable
@@ -26,8 +30,8 @@ import org.fossify.clock.helpers.STOPWATCH_TOGGLE_ACTION
 import org.fossify.clock.helpers.TABS_COUNT
 import org.fossify.clock.helpers.TAB_ALARM
 import org.fossify.clock.helpers.TAB_ALARM_INDEX
-import org.fossify.clock.helpers.TAB_CLOCK
-import org.fossify.clock.helpers.TAB_CLOCK_INDEX
+import org.fossify.clock.helpers.TAB_RELAX
+import org.fossify.clock.helpers.TAB_RELAX_INDEX
 import org.fossify.clock.helpers.TAB_STOPWATCH
 import org.fossify.clock.helpers.TAB_STOPWATCH_INDEX
 import org.fossify.clock.helpers.TAB_TIMER
@@ -38,6 +42,7 @@ import org.fossify.commons.databinding.BottomTablayoutItemBinding
 import org.fossify.commons.extensions.appLaunched
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.convertToBitmap
+import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.getBottomNavigationBackgroundColor
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
@@ -91,6 +96,46 @@ class MainActivity : SimpleActivity() {
                 }
             }
         }
+
+        promptBatteryOptimizationWhitelist()
+    }
+
+    /**
+     * 国产 ROM 会激进杀后台，闹钟类应用被加入电池优化白名单后才能可靠响铃。
+     * 一次性引导用户去系统弹窗里放行。
+     */
+    private fun promptBatteryOptimizationWhitelist() {
+        if (config.wasBatteryPromptShown) {
+            return
+        }
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            config.wasBatteryPromptShown = true
+            return
+        }
+
+        config.wasBatteryPromptShown = true
+        getAlertDialogBuilder()
+            .setTitle(R.string.battery_prompt_title)
+            .setMessage(R.string.battery_prompt_message)
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                try {
+                    startActivity(
+                        Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            Uri.parse("package:$packageName")
+                        )
+                    )
+                } catch (e: Exception) {
+                    try {
+                        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    } catch (ignored: Exception) {
+                    }
+                }
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
     }
 
     override fun onResume() {
@@ -179,8 +224,6 @@ class MainActivity : SimpleActivity() {
                 }
 
                 R.id.more_apps_from_us -> launchMoreAppsFromUsIntent()
-                R.id.sleep_report -> startActivity(Intent(this, SleepReportActivity::class.java))
-                R.id.relax_bedtime -> startActivity(Intent(this, RelaxActivity::class.java))
                 R.id.settings -> launchSettings()
                 R.id.about -> launchAbout()
                 else -> return@setOnMenuItemClickListener false
@@ -200,7 +243,7 @@ class MainActivity : SimpleActivity() {
 
     override fun onNewIntent(intent: Intent) {
         if (intent.extras?.containsKey(OPEN_TAB) == true) {
-            val tabToOpen = intent.getIntExtra(OPEN_TAB, TAB_CLOCK)
+            val tabToOpen = intent.getIntExtra(OPEN_TAB, TAB_RELAX)
             binding.viewPager.setCurrentItem(getTabIndex(tabToOpen), false)
             if (tabToOpen == TAB_TIMER) {
                 val timerId = intent.getIntExtra(TIMER_ID, INVALID_TIMER_ID)
@@ -239,10 +282,6 @@ class MainActivity : SimpleActivity() {
         }
     }
 
-    fun updateClockTabAlarm() {
-        getViewPagerAdapter()?.updateClockTabAlarm()
-    }
-
     private fun getViewPagerAdapter() = binding.viewPager.adapter as? ViewPagerAdapter
 
     private fun initFragments() {
@@ -271,13 +310,13 @@ class MainActivity : SimpleActivity() {
     private fun setupTabs() {
         binding.mainTabsHolder.removeAllTabs()
         val tabDrawables = arrayOf(
-            R.drawable.ic_clock_vector,
+            R.drawable.ic_tab_relax,
             R.drawable.ic_alarm_vector,
             R.drawable.ic_stopwatch_vector,
             R.drawable.ic_hourglass_vector
         )
         val tabLabels = arrayOf(
-            R.string.clock,
+            R.string.tab_relax,
             org.fossify.commons.R.string.alarm,
             R.string.stopwatch,
             R.string.timer
@@ -412,7 +451,7 @@ class MainActivity : SimpleActivity() {
 
     private fun getTabIndex(tabId: Int): Int {
         return when (tabId) {
-            TAB_CLOCK -> TAB_CLOCK_INDEX
+            TAB_RELAX -> TAB_RELAX_INDEX
             TAB_ALARM -> TAB_ALARM_INDEX
             TAB_STOPWATCH -> TAB_STOPWATCH_INDEX
             TAB_TIMER -> TAB_TIMER_INDEX

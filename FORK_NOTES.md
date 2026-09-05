@@ -49,6 +49,14 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   为星光色系（深星蓝紫 #4E57A5 × 柔金 #E7C97F，夜间更深一档）
 - 桌面长按快捷方式（秒表）改为固定品牌金，不再跟随旧的多色图标系统
 
+## v1.0.5 行为升级
+- **日出渐亮重做**：不再用占空比闪烁（LED 无亮度档，调制即闪烁）；手电筒全程稳亮，
+  新增全屏"日出页"（锁屏可见）把屏幕亮度与天空色从深夜平滑爬坡到暖昼，轻触可隐藏画面、灯光继续
+- **助眠 tab**：睡前助眠 + 睡眠报告合并为第一个 tab，"时钟" tab 移除
+  （ClockFragment 代码保留但不再挂载）；完整睡眠报告从卡片进入
+- **后台保活**：新增电池优化白名单一次性引导（REQUEST_IGNORE_BATTERY_OPTIMIZATIONS）；
+  重启后由 BOOT_COMPLETED 接收器重排全部闹钟与日出调度（上游已有链路）
+
 ## 已知上游兼容问题（已修复）
 - commons 6.1.6 的 `Context.getSelectedDaysString` 会把 `getStringArray().toList()`
   （`Arrays$ArrayList`）强转为 `java.util.ArrayList`，闹钟列表一渲染必崩。

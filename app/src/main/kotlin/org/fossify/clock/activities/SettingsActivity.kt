@@ -20,7 +20,7 @@ import org.fossify.clock.helpers.ExportHelper
 import org.fossify.clock.helpers.IMPORT_BACKUP_MIME_TYPES
 import org.fossify.clock.helpers.ImportHelper
 import org.fossify.clock.helpers.TAB_ALARM
-import org.fossify.clock.helpers.TAB_CLOCK
+import org.fossify.clock.helpers.TAB_RELAX
 import org.fossify.clock.helpers.TAB_STOPWATCH
 import org.fossify.clock.helpers.TAB_TIMER
 import org.fossify.clock.helpers.TimerHelper
@@ -140,7 +140,7 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsDefaultTab.text = getDefaultTabText()
         binding.settingsDefaultTabHolder.setOnClickListener {
             val items = arrayListOf(
-                RadioItem(TAB_CLOCK, getString(R.string.clock)),
+                RadioItem(TAB_RELAX, getString(R.string.tab_relax)),
                 RadioItem(TAB_ALARM, getString(org.fossify.commons.R.string.alarm)),
                 RadioItem(TAB_STOPWATCH, getString(R.string.stopwatch)),
                 RadioItem(TAB_TIMER, getString(R.string.timer)),
@@ -165,7 +165,7 @@ class SettingsActivity : SimpleActivity() {
 
     private fun getDefaultTabText() = getString(
         when (config.defaultTab) {
-            TAB_CLOCK -> R.string.clock
+            TAB_RELAX -> R.string.tab_relax
             TAB_ALARM -> org.fossify.commons.R.string.alarm
             TAB_STOPWATCH -> R.string.stopwatch
             TAB_TIMER -> R.string.timer

@@ -7,7 +7,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.PowerManager
-import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,10 +25,10 @@ import org.fossify.clock.helpers.TorchHelper
 import org.fossify.commons.extensions.notificationManager
 
 /**
- * Runs the "sunrise" fade-in: ramps the flash LED from near-dark to full brightness
- * during the minutes before the alarm rings. The LED cannot change brightness, so the
- * ramp is a duty-cycle PWM: the on-ratio within each cycle grows following an ease-in
- * curve, which reads to the eye as a slow sunrise.
+ * Keeps the flashlight steadily on during the minutes before the alarm rings.
+ * The smooth "dark to bright" sunrise itself comes from [org.fossify.clock.activities.SunriseActivity],
+ * which ramps the screen brightness (the LED has no dimming levels - modulating it
+ * would only produce visible flicker).
  */
 class SunriseService : Service() {
 
@@ -38,13 +37,10 @@ class SunriseService : Service() {
         const val ACTION_STOP_SUNRISE = "org.fossify.clock.STOP_SUNRISE"
 
         const val DEFAULT_SUNRISE_MINUTES = 10
-
-        private const val PWM_CYCLE_MS = 80L
-        private const val MIN_DUTY = 0.04f
     }
 
-    private val rampScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private var rampJob: Job? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var holdJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -52,7 +48,7 @@ class SunriseService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP_SUNRISE -> {
-                stopRamp()
+                stopHold()
                 stopSelf()
             }
 
@@ -69,40 +65,27 @@ class SunriseService : Service() {
                 }
 
                 startForeground(SUNRISE_NOTIFICATION_ID, buildNotification(alarm.label))
-                startRamp(durationMinutes)
+                startHold(durationMinutes)
             }
         }
 
         return START_STICKY
     }
 
-    private fun startRamp(durationMinutes: Int) {
-        rampJob?.cancel()
-        rampJob = rampScope.launch {
+    /** Holds the torch steadily on for the whole sunrise window. */
+    private fun startHold(durationMinutes: Int) {
+        holdJob?.cancel()
+        holdJob = scope.launch {
             acquireWakeLock(durationMinutes)
 
-            val totalMillis = durationMinutes * 60_000L
-            val startRealtime = SystemClock.elapsedRealtime()
-
-            while (isActive) {
-                val progress =
-                    (SystemClock.elapsedRealtime() - startRealtime).toFloat() / totalMillis
-                if (progress >= 1f) {
-                    break
-                }
-
-                val duty = MIN_DUTY + (1f - MIN_DUTY) * progress * progress
-                val onMillis = (PWM_CYCLE_MS * duty).toLong().coerceIn(1L, PWM_CYCLE_MS - 1L)
-                val offMillis = PWM_CYCLE_MS - onMillis
-
+            TorchHelper.setTorch(this@SunriseService, true)
+            val endAt = System.currentTimeMillis() + durationMinutes * 60_000L
+            while (isActive && System.currentTimeMillis() < endAt) {
                 if (!TorchHelper.setTorch(this@SunriseService, true)) {
-                    // flash unit busy (e.g. camera in use) - give up quietly,
-                    // the ringing screen still fades in its own light
+                    // flash unit got busy (camera in use) - nothing to hold anymore
                     break
                 }
-                delay(onMillis)
-                TorchHelper.setTorch(this@SunriseService, false)
-                delay(offMillis)
+                delay(2000)
             }
 
             TorchHelper.setTorch(this@SunriseService, false)
@@ -113,9 +96,9 @@ class SunriseService : Service() {
         }
     }
 
-    private fun stopRamp() {
-        rampJob?.cancel()
-        rampJob = null
+    private fun stopHold() {
+        holdJob?.cancel()
+        holdJob = null
         TorchHelper.setTorch(this, false)
         releaseWakeLock()
     }
@@ -162,7 +145,7 @@ class SunriseService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopRamp()
+        stopHold()
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 }

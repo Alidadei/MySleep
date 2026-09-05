@@ -7,14 +7,6 @@
         android:title="@string/sort_by"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/sleep_report"
-        android:title="@string/sleep_report"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/relax_bedtime"
-        android:title="@string/relax_bedtime"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings_cog_vector"
         android:title="@string/settings"

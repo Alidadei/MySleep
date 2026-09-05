@@ -203,7 +203,6 @@ class AlarmFragment : Fragment(), ToggleAlarmInterface {
         } else {
             activity.cancelAlarmClock(alarm)
         }
-        activity.updateClockTabAlarm()
     }
 
     fun updateAlarmSound(alarmSound: AlarmSound) {

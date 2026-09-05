@@ -1,4 +1,4 @@
-package org.fossify.clock.activities
+package org.fossify.clock.fragments
 
 import android.content.Intent
 import android.net.Uri
@@ -7,32 +7,36 @@ import android.provider.OpenableColumns
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import org.fossify.clock.R
-import org.fossify.clock.databinding.ActivityRelaxBinding
+import org.fossify.clock.activities.SleepReportActivity
+import org.fossify.clock.databinding.FragmentRelaxBinding
+import org.fossify.clock.extensions.dbHelper
+import org.fossify.clock.extensions.requiredActivity
 import org.fossify.clock.helpers.RelaxItem
 import org.fossify.clock.helpers.RelaxStore
 import org.fossify.commons.extensions.beGoneIf
 import org.fossify.commons.extensions.getAlertDialogBuilder
-import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
-import org.fossify.commons.extensions.viewBinding
-import org.fossify.commons.helpers.NavigationIcon
+import org.fossify.commons.helpers.ensureBackgroundThread
+import kotlin.math.roundToInt
 
 /**
- * Bedtime relax favorites: curated sleep-friendly content plus user-added links
- * (novels, blogs, music) and local files (ebooks, audio). Web items open in the
- * browser, local files open in whatever app handles them.
+ * The bedtime tab: a sleep report summary on top (with a link to the full
+ * report) and the relax favorites below (curated picks, web links and local
+ * files - novels, audio).
  */
-class RelaxActivity : SimpleActivity() {
+class RelaxFragment : Fragment() {
 
-    private val binding by viewBinding(ActivityRelaxBinding::inflate)
-    private val textColor by lazy { getProperTextColor() }
+    private lateinit var binding: FragmentRelaxBinding
 
     private val filePicker =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -41,20 +45,67 @@ class RelaxActivity : SimpleActivity() {
             }
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-        setupTopAppBar(binding.relaxAppbar, NavigationIcon.Arrow)
-        updateTextColors(binding.root)
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        binding = FragmentRelaxBinding.inflate(inflater, container, false)
         binding.relaxAddFavorite.setOnClickListener {
             showAddChoiceDialog()
         }
+        return binding.root
+    }
 
+    override fun onResume() {
+        super.onResume()
+        refreshSleepSummary()
         showItems()
     }
 
+    private fun refreshSleepSummary() {
+        ensureBackgroundThread {
+            val records = requiredActivity.dbHelper.getRecentSleepRecords(30)
+            activity?.runOnUiThread {
+                showSleepSummary(records)
+            }
+        }
+    }
+
+    private fun showSleepSummary(records: List<org.fossify.clock.models.SleepRecord>) {
+        if (!isAdded) {
+            return
+        }
+
+        binding.sleepReportCard.beGoneIf(records.isEmpty())
+        if (records.isEmpty()) {
+            return
+        }
+
+        val oversleepMinutes = records.map {
+            ((it.stoppedAtMillis - it.ringAtMillis) / 60000L).coerceAtLeast(0L)
+        }
+        val avgOversleep = (oversleepMinutes.sum().toFloat() / oversleepMinutes.size).roundToInt()
+        val onTimeCount = oversleepMinutes.count { it <= 5 }
+        val onTimePercent = (onTimeCount * 100f / records.size).roundToInt()
+
+        binding.sleepReportSummary.text = getString(
+            R.string.sleep_report_summary_fmt,
+            records.size,
+            onTimePercent,
+            avgOversleep
+        )
+
+        binding.sleepReportDetails.setOnClickListener {
+            startActivity(Intent(requireContext(), SleepReportActivity::class.java))
+        }
+    }
+
     private fun showItems() {
+        if (!isAdded) {
+            return
+        }
+
         binding.relaxHolder.removeAllViews()
 
         addSectionLabel(getString(R.string.relax_picks_label))
@@ -62,18 +113,24 @@ class RelaxActivity : SimpleActivity() {
             addItemRow(item, deletable = false)
         }
 
-        val customItems = RelaxStore.getCustomItems(this)
+        val customItems = RelaxStore.getCustomItems(requireContext())
         addSectionLabel(getString(R.string.relax_custom_label))
         binding.relaxEmptyCustom.beGoneIf(customItems.isNotEmpty())
         customItems.forEach { item ->
             addItemRow(item, deletable = true)
         }
 
-        updateTextColors(binding.relaxHolder)
+        updateTextColorsSafely()
+    }
+
+    private fun updateTextColorsSafely() {
+        if (isAdded) {
+            requireActivity().updateTextColors(binding.relaxHolder)
+        }
     }
 
     private fun addSectionLabel(text: String) {
-        val label = LayoutInflater.from(this).inflate(
+        val label = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax_section, binding.relaxHolder, false
         ) as org.fossify.commons.views.MyTextView
         label.text = text
@@ -81,7 +138,7 @@ class RelaxActivity : SimpleActivity() {
     }
 
     private fun addItemRow(item: RelaxItem, deletable: Boolean) {
-        val row = LayoutInflater.from(this).inflate(
+        val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
         ) as LinearLayout
 
@@ -100,10 +157,10 @@ class RelaxActivity : SimpleActivity() {
 
         if (deletable) {
             row.setOnLongClickListener {
-                getAlertDialogBuilder()
+                requireActivity().getAlertDialogBuilder()
                     .setMessage(R.string.relax_delete_confirm)
                     .setPositiveButton(R.string.relax_remove) { _, _ ->
-                        RelaxStore.removeCustomItem(this, item.id)
+                        RelaxStore.removeCustomItem(requireContext(), item.id)
                         showItems()
                     }
                     .setNegativeButton(org.fossify.commons.R.string.cancel, null)
@@ -121,7 +178,7 @@ class RelaxActivity : SimpleActivity() {
             getString(R.string.relax_add_local)
         )
 
-        getAlertDialogBuilder()
+        requireActivity().getAlertDialogBuilder()
             .setTitle(R.string.relax_add_favorite)
             .setItems(options) { _, which ->
                 when (which) {
@@ -135,22 +192,22 @@ class RelaxActivity : SimpleActivity() {
 
     private fun handlePickedLocalFile(uri: Uri) {
         try {
-            contentResolver.takePersistableUriPermission(
+            requireContext().contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
         } catch (e: Exception) {
-            // some providers do not hand out persistable grants, the permission
-            // then only lasts until reboot
+            // some providers do not hand out persistable grants,
+            // the permission then only lasts until reboot
         }
 
         val title = queryDisplayName(uri) ?: getString(R.string.relax_local_label)
-        RelaxStore.addCustomItem(this, title, uri.toString(), isLocal = true)
+        RelaxStore.addCustomItem(requireContext(), title, uri.toString(), isLocal = true)
         showItems()
     }
 
     private fun queryDisplayName(uri: Uri): String? {
         return try {
-            contentResolver.query(
+            requireContext().contentResolver.query(
                 uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null
             )?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
@@ -165,7 +222,7 @@ class RelaxActivity : SimpleActivity() {
             val intent = if (item.isLocal) {
                 val uri = Uri.parse(item.url)
                 Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, contentResolver.getType(uri) ?: "*/*")
+                    setDataAndType(uri, requireContext().contentResolver.getType(uri) ?: "*/*")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
             } else {
@@ -173,29 +230,30 @@ class RelaxActivity : SimpleActivity() {
             }
             startActivity(intent)
         } catch (e: Exception) {
-            toast(R.string.relax_invalid_url)
+            requireContext().toast(R.string.relax_invalid_url)
         }
     }
 
     private fun showAddFavoriteDialog() {
-        val holder = LinearLayout(this).apply {
+        val holder = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(resources.displayMetrics.widthPixels / 10, 40, resources.displayMetrics.widthPixels / 10, 0)
+            setPadding(
+                resources.displayMetrics.widthPixels / 10, 40,
+                resources.displayMetrics.widthPixels / 10, 0
+            )
         }
 
-        val titleInput = EditText(this).apply {
+        val titleInput = EditText(requireContext()).apply {
             hint = getString(R.string.relax_title_hint)
-            setTextColor(textColor)
         }
-        val urlInput = EditText(this).apply {
+        val urlInput = EditText(requireContext()).apply {
             hint = getString(R.string.relax_url_hint)
-            setTextColor(textColor)
         }
 
         holder.addView(titleInput)
         holder.addView(urlInput)
 
-        val dialog = getAlertDialogBuilder()
+        val dialog = requireActivity().getAlertDialogBuilder()
             .setTitle(R.string.relax_add_favorite)
             .setPositiveButton(org.fossify.commons.R.string.ok, null)
             .setNegativeButton(org.fossify.commons.R.string.cancel, null)
@@ -219,7 +277,7 @@ class RelaxActivity : SimpleActivity() {
 
             okButton.setOnClickListener {
                 RelaxStore.addCustomItem(
-                    this,
+                    requireContext(),
                     titleInput.text.toString().trim(),
                     RelaxStore.normalizeUrl(urlInput.text.toString())
                 )
@@ -230,13 +288,5 @@ class RelaxActivity : SimpleActivity() {
 
         dialog.setView(holder)
         dialog.show()
-    }
-
-    private fun openUrl(url: String) {
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-        } catch (e: Exception) {
-            toast(R.string.relax_invalid_url)
-        }
     }
 }

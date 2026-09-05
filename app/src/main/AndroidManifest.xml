@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <uses-permission
         android:name="android.permission.ACCESS_NETWORK_STATE"
@@ -126,19 +127,21 @@
             android:theme="@style/Theme.Transparent" />
 
         <activity
+            android:name=".activities.SunriseActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:showOnLockScreen="true"
+            android:taskAffinity=".SunriseActivity"
+            android:theme="@style/Theme.Transparent" />
+
+        <activity
             android:name=".activities.SleepReportActivity"
             android:configChanges="orientation"
             android:exported="false"
             android:label="@string/sleep_report"
             android:parentActivityName=".activities.MainActivity" />
 
-        <activity
-            android:name=".activities.RelaxActivity"
-            android:configChanges="orientation"
-            android:exported="false"
-            android:label="@string/relax_bedtime"
-            android:parentActivityName=".activities.MainActivity"
-            android:windowSoftInputMode="adjustPan" />
 
         <activity
             android:name=".activities.WidgetDigitalConfigureActivity"

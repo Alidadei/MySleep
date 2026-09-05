@@ -31,7 +31,7 @@ class SplashActivity : BaseSplashActivity() {
 
             intent.extras?.containsKey(OPEN_TAB) == true -> {
                 Intent(this, MainActivity::class.java).apply {
-                    putExtra(OPEN_TAB, intent.getIntExtra(OPEN_TAB, TAB_CLOCK))
+                    putExtra(OPEN_TAB, intent.getIntExtra(OPEN_TAB, TAB_RELAX))
                     putExtra(TIMER_ID, intent.getIntExtra(TIMER_ID, INVALID_TIMER_ID))
                     startActivity(this)
                 }

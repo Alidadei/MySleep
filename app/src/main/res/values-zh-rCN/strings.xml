@@ -60,9 +60,14 @@
     <string name="sunrise_fade_off">关闭</string>
     <string name="sunrise_fade_minutes">提前 %d 分钟渐亮</string>
     <string name="sunrise_service_note">日出渐亮进行中</string>
+    <string name="sunrise_hint">日出渐亮中 · 轻触屏幕隐藏画面，灯光会继续</string>
+    <string name="tab_relax">助眠</string>
+    <string name="battery_prompt_title">让闹钟准时响铃</string>
+    <string name="battery_prompt_message">为保证闹钟在后台准时唤醒，建议在下一个界面允许“睡眠站台”忽略电池优化。</string>
 
     <!-- 睡眠报告 -->
     <string name="sleep_report">睡眠报告</string>
+    <string name="sleep_report_details">查看完整报告</string>
     <string name="sleep_report_note">数据来自你实际关闭闹钟的时刻</string>
     <string name="sleep_report_empty">还没有起床记录。第一次闹钟响过后再来看看。</string>
     <string name="sleep_report_summary_fmt">最近 %1$d 次起床 · 按时率 %2$d%% · 平均赖床 %3$d 分钟</string>

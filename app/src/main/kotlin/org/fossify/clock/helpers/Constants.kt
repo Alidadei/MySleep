@@ -66,16 +66,18 @@ const val UPCOMING_ALARM_INTENT_ID = 10002
 const val UPCOMING_ALARM_NOTIFICATION_ID = 10003
 const val SUNRISE_ALARM_INTENT_ID = 10004
 const val SUNRISE_NOTIFICATION_ID = 10005
+const val SUNRISE_SCREEN_NOTIFICATION_ID = 10006
 
 const val SUNRISE_DURATION_MIN = "sunrise_duration_min"
 const val SUNRISE_NOTIFICATION_CHANNEL_ID = "sunrise_channel"
+const val BATTERY_PROMPT_SHOWN = "battery_prompt_shown"
 
 const val OPEN_TAB = "open_tab"
-const val TAB_CLOCK = 1
+const val TAB_RELAX = 1
 const val TAB_ALARM = 2
 const val TAB_STOPWATCH = 4
 const val TAB_TIMER = 8
-const val TAB_CLOCK_INDEX = 0
+const val TAB_RELAX_INDEX = 0
 const val TAB_ALARM_INDEX = 1
 const val TAB_STOPWATCH_INDEX = 2
 const val TAB_TIMER_INDEX = 3

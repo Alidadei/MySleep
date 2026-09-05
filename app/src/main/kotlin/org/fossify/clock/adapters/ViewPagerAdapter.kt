@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import org.fossify.clock.fragments.AlarmFragment
-import org.fossify.clock.fragments.ClockFragment
+import org.fossify.clock.fragments.RelaxFragment
 import org.fossify.clock.fragments.StopwatchFragment
 import org.fossify.clock.fragments.TimerFragment
 import org.fossify.clock.helpers.*
@@ -34,7 +34,7 @@ class ViewPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
     override fun getCount() = TABS_COUNT
 
     private fun getFragment(position: Int) = when (position) {
-        TAB_CLOCK_INDEX -> ClockFragment()
+        TAB_RELAX_INDEX -> RelaxFragment()
         TAB_ALARM_INDEX -> AlarmFragment()
         TAB_STOPWATCH_INDEX -> StopwatchFragment()
         TAB_TIMER_INDEX -> TimerFragment()
@@ -47,10 +47,6 @@ class ViewPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 
     fun showTimerSortDialog() {
         (fragments[TAB_TIMER_INDEX] as? TimerFragment)?.showSortingDialog()
-    }
-
-    fun updateClockTabAlarm() {
-        (fragments[TAB_CLOCK_INDEX] as? ClockFragment)?.updateAlarm()
     }
 
     fun updateAlarmTabAlarmSound(alarmSound: AlarmSound) {
