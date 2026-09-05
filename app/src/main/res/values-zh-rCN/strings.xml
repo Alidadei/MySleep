@@ -76,6 +76,9 @@
     <string name="relax_custom_label">我的收藏</string>
     <string name="relax_empty_custom">还没有收藏。添加一本小说、一篇博客或一段音乐吧。</string>
     <string name="relax_add_favorite">添加收藏</string>
+    <string name="relax_add_web">网页链接</string>
+    <string name="relax_add_local">本地文件（小说 / 音频）</string>
+    <string name="relax_local_label">本地文件</string>
     <string name="relax_title_hint">标题</string>
     <string name="relax_url_hint">网址</string>
     <string name="relax_delete_confirm">删除这条收藏？</string>

@@ -80,6 +80,9 @@
     <string name="relax_custom_label">My favorites</string>
     <string name="relax_empty_custom">No favorites yet. Add a novel, blog or music link you like.</string>
     <string name="relax_add_favorite">Add favorite</string>
+    <string name="relax_add_web">Web link</string>
+    <string name="relax_add_local">Local file (novel / audio)</string>
+    <string name="relax_local_label">Local file</string>
     <string name="relax_title_hint">Title</string>
     <string name="relax_url_hint">URL</string>
     <string name="relax_delete_confirm">Remove this favorite?</string>

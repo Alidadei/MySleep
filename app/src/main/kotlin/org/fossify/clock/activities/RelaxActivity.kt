@@ -1,12 +1,15 @@
 package org.fossify.clock.activities
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import org.fossify.clock.R
@@ -23,13 +26,20 @@ import org.fossify.commons.helpers.NavigationIcon
 
 /**
  * Bedtime relax favorites: curated sleep-friendly content plus user-added links
- * (novels, blogs, music...). Items open in whatever app handles them (browser,
- * podcast player...).
+ * (novels, blogs, music) and local files (ebooks, audio). Web items open in the
+ * browser, local files open in whatever app handles them.
  */
 class RelaxActivity : SimpleActivity() {
 
     private val binding by viewBinding(ActivityRelaxBinding::inflate)
     private val textColor by lazy { getProperTextColor() }
+
+    private val filePicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                handlePickedLocalFile(uri)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +48,7 @@ class RelaxActivity : SimpleActivity() {
         updateTextColors(binding.root)
 
         binding.relaxAddFavorite.setOnClickListener {
-            showAddFavoriteDialog()
+            showAddChoiceDialog()
         }
 
         showItems()
@@ -78,10 +88,14 @@ class RelaxActivity : SimpleActivity() {
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
             .text = item.title
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .text = item.url
+            .text = if (item.isLocal) {
+                getString(R.string.relax_local_label)
+            } else {
+                item.url
+            }
 
         row.setOnClickListener {
-            openUrl(item.url)
+            openItem(item)
         }
 
         if (deletable) {
@@ -99,6 +113,68 @@ class RelaxActivity : SimpleActivity() {
         }
 
         binding.relaxHolder.addView(row)
+    }
+
+    private fun showAddChoiceDialog() {
+        val options = arrayOf(
+            getString(R.string.relax_add_web),
+            getString(R.string.relax_add_local)
+        )
+
+        getAlertDialogBuilder()
+            .setTitle(R.string.relax_add_favorite)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showAddFavoriteDialog()
+                    1 -> filePicker.launch(arrayOf("text/*", "audio/*", "application/epub+zip"))
+                }
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
+    }
+
+    private fun handlePickedLocalFile(uri: Uri) {
+        try {
+            contentResolver.takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (e: Exception) {
+            // some providers do not hand out persistable grants, the permission
+            // then only lasts until reboot
+        }
+
+        val title = queryDisplayName(uri) ?: getString(R.string.relax_local_label)
+        RelaxStore.addCustomItem(this, title, uri.toString(), isLocal = true)
+        showItems()
+    }
+
+    private fun queryDisplayName(uri: Uri): String? {
+        return try {
+            contentResolver.query(
+                uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun openItem(item: RelaxItem) {
+        try {
+            val intent = if (item.isLocal) {
+                val uri = Uri.parse(item.url)
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, contentResolver.getType(uri) ?: "*/*")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            } else {
+                Intent(Intent.ACTION_VIEW, item.url.toUri())
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            toast(R.string.relax_invalid_url)
+        }
     }
 
     private fun showAddFavoriteDialog() {

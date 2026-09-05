@@ -5,9 +5,11 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.fossify.clock.activities.MainActivity
+import org.fossify.clock.dialogs.EditAlarmDialog
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getSelectedDaysStringSafe
 import org.fossify.clock.fragments.AlarmFragment
+import org.fossify.clock.helpers.RelaxStore
 import org.fossify.commons.views.MyRecyclerView
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -86,5 +88,37 @@ class LaunchSmokeTest {
                 assert(bound) { "alarm rows should have been bound during layout" }
             }
         }
+    }
+
+    /**
+     * Regression test: opening the "add/edit alarm" dialog used to crash with
+     * ClassCastException (Arrays$ArrayList -> ArrayList) while building the
+     * weekday letter row.
+     */
+    @Test
+    fun editAlarmDialog_opens_withoutCrash() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val alarm = activity.dbHelper.getAlarms().firstOrNull { it.isRecurring() }
+                assert(alarm != null) { "seeded recurring alarm missing" }
+
+                EditAlarmDialog(activity, alarm!!) { }
+            }
+        }
+    }
+
+    @Test
+    fun relaxStore_localFavorites_roundtrip() {
+        val context = ApplicationProvider.getApplicationContext<App>()
+        RelaxStore.addCustomItem(context, "小说.txt", "content://test/novel", isLocal = true)
+        RelaxStore.addCustomItem(context, "白噪音", "https://example.com/rain")
+
+        val items = RelaxStore.getCustomItems(context)
+        val local = items.last { it.title == "小说.txt" }
+        val web = items.last { it.title == "白噪音" }
+        assert(local.isLocal && !web.isLocal) { "local flag should survive serialization" }
+
+        RelaxStore.removeCustomItem(context, local.id)
+        assert(RelaxStore.getCustomItems(context).none { it.id == local.id })
     }
 }

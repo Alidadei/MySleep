@@ -14,6 +14,7 @@ data class RelaxItem(
     val title: String,
     val url: String,
     val isCustom: Boolean = false,
+    val isLocal: Boolean = false,
 )
 
 object RelaxStore {
@@ -61,14 +62,15 @@ object RelaxStore {
         }
     }
 
-    fun addCustomItem(context: Context, title: String, url: String) {
+    fun addCustomItem(context: Context, title: String, url: String, isLocal: Boolean = false) {
         val items = getCustomItems(context)
         items.add(
             RelaxItem(
                 id = System.currentTimeMillis(),
                 title = title,
                 url = url,
-                isCustom = true
+                isCustom = true,
+                isLocal = isLocal
             )
         )
         saveItems(context, items)

@@ -47,3 +47,6 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   （`Arrays$ArrayList`）强转为 `java.util.ArrayList`，闹钟列表一渲染必崩。
   已在 `extensions/Context.kt` 用 `getSelectedDaysStringSafe` 替代，
   并有 Robolectric 回归测试（`LaunchSmokeTest`）覆盖列表绑定。
+- 同款强转也在上游 main 的 `EditAlarmDialog` 里（星期字母行构建），
+  "新增/编辑闹钟"一打开就崩；已改为 `toCollection(ArrayList())`，
+  回归测试 `editAlarmDialog_opens_withoutCrash` 覆盖。
