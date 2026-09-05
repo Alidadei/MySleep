@@ -1,6 +1,7 @@
 package org.fossify.clock.activities
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
@@ -9,6 +10,7 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.core.graphics.drawable.toDrawable
@@ -97,45 +99,113 @@ class MainActivity : SimpleActivity() {
             }
         }
 
-        promptBatteryOptimizationWhitelist()
+        promptAlarmReliabilitySetup()
     }
 
     /**
-     * 国产 ROM 会激进杀后台，闹钟类应用被加入电池优化白名单后才能可靠响铃。
-     * 一次性引导用户去系统弹窗里放行。
+     * 国产 ROM 的后台清理是闹钟失灵的头号原因。省电白名单每次冷启动自检，
+     * 未通过就引导；自启动开关无法用代码探测，只引导一次（页面直达）。
      */
-    private fun promptBatteryOptimizationWhitelist() {
-        if (config.wasBatteryPromptShown) {
-            return
-        }
-
+    private fun promptAlarmReliabilitySetup() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            config.wasBatteryPromptShown = true
+        val batteryIgnored = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+        if (!batteryIgnored) {
+            getAlertDialogBuilder()
+                .setTitle(R.string.battery_prompt_title)
+                .setMessage(R.string.battery_prompt_message)
+                .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                    try {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                    } catch (e: Exception) {
+                        try {
+                            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        } catch (ignored: Exception) {
+                        }
+                    }
+                }
+                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                .show()
+        }
+
+        promptAutoStartPermission()
+    }
+
+    private fun promptAutoStartPermission() {
+        if (config.autostartPromptShown) {
             return
         }
 
-        config.wasBatteryPromptShown = true
+        val autoStartIntent = getAutoStartIntent() ?: return
+        config.autostartPromptShown = true
+
         getAlertDialogBuilder()
-            .setTitle(R.string.battery_prompt_title)
-            .setMessage(R.string.battery_prompt_message)
+            .setTitle(R.string.autostart_prompt_title)
+            .setMessage(R.string.autostart_prompt_message)
             .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
                 try {
-                    startActivity(
-                        Intent(
-                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                            Uri.parse("package:$packageName")
-                        )
-                    )
+                    startActivity(autoStartIntent)
                 } catch (e: Exception) {
                     try {
-                        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
                     } catch (ignored: Exception) {
                     }
                 }
             }
             .setNegativeButton(org.fossify.commons.R.string.cancel, null)
             .show()
+    }
+
+    /** 自启动设置页，按厂商直达（激进杀后台的 ROM 全在清单里）。 */
+    private fun getAutoStartIntent(): Intent? {
+        val manufacturer = Build.MANUFACTURER.lowercase(Locale.getDefault())
+        val component = when {
+            manufacturer.contains("xiaomi") || manufacturer.contains("redmi") ->
+                ComponentName(
+                    "com.miui.securitycenter",
+                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
+                )
+
+            manufacturer.contains("huawei") || manufacturer.contains("honor") ->
+                ComponentName(
+                    "com.huawei.systemmanager",
+                    "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"
+                )
+
+            manufacturer.contains("oppo") || manufacturer.contains("realme") ->
+                ComponentName(
+                    "com.coloros.safecenter",
+                    "com.coloros.safecenter.permission.startup.StartupAppListActivity"
+                )
+
+            manufacturer.contains("vivo") || manufacturer.contains("iqoo") ->
+                ComponentName(
+                    "com.vivo.permissionmanager",
+                    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
+                )
+
+            manufacturer.contains("meizu") ->
+                ComponentName("com.meizu.safe", "com.meizu.safe.permission.SmartBGActivity")
+
+            else -> null
+        }
+
+        return component?.let {
+            Intent().apply {
+                this.component = it
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        }
     }
 
     override fun onResume() {

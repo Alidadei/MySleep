@@ -90,10 +90,10 @@ class Config(context: Context) : BaseConfig(context) {
             putInt(ALARM_MAX_REMINDER_SECS, alarmMaxReminderSecs)
         }
 
-    var wasBatteryPromptShown: Boolean
-        get() = prefs.getBoolean(BATTERY_PROMPT_SHOWN, false)
-        set(wasBatteryPromptShown) = prefs.edit {
-            putBoolean(BATTERY_PROMPT_SHOWN, wasBatteryPromptShown)
+    var autostartPromptShown: Boolean
+        get() = prefs.getBoolean(AUTOSTART_PROMPT_SHOWN, false)
+        set(autostartPromptShown) = prefs.edit {
+            putBoolean(AUTOSTART_PROMPT_SHOWN, autostartPromptShown)
         }
 
     var increaseVolumeGradually: Boolean

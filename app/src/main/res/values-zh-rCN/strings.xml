@@ -63,6 +63,8 @@
     <string name="sunrise_hint">日出渐亮中 · 轻触屏幕隐藏画面，灯光会继续</string>
     <string name="tab_relax">助眠</string>
     <string name="battery_prompt_title">让闹钟准时响铃</string>
+    <string name="autostart_prompt_title">重启后也能响铃</string>
+    <string name="autostart_prompt_message">手机厂商默认禁止应用开机自启。请在下一个界面允许“睡眠站台”自启动，重启手机后闹钟才能照常响。</string>
     <string name="battery_prompt_message">为保证闹钟在后台准时唤醒，建议在下一个界面允许“睡眠站台”忽略电池优化。</string>
 
     <!-- 睡眠报告 -->

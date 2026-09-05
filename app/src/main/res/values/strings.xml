@@ -67,6 +67,8 @@
     <string name="sunrise_hint">Sunrise in progress · tap to hide the screen, the light stays on</string>
     <string name="tab_relax">Sleep</string>
     <string name="battery_prompt_title">Reliable alarms</string>
+    <string name="autostart_prompt_title">Alarms after reboot</string>
+    <string name="autostart_prompt_message">Your phone maker blocks apps from starting themselves by default. Allow autostart for Sleep Station on the next screen so alarms keep working after a reboot.</string>
     <string name="battery_prompt_message">To make sure alarms ring on time in the background, allow Sleep Station to ignore battery optimizations on the next screen.</string>
 
     <!-- Sleep report -->

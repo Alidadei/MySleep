@@ -70,7 +70,7 @@ const val SUNRISE_SCREEN_NOTIFICATION_ID = 10006
 
 const val SUNRISE_DURATION_MIN = "sunrise_duration_min"
 const val SUNRISE_NOTIFICATION_CHANNEL_ID = "sunrise_channel"
-const val BATTERY_PROMPT_SHOWN = "battery_prompt_shown"
+const val AUTOSTART_PROMPT_SHOWN = "autostart_prompt_shown"
 
 const val OPEN_TAB = "open_tab"
 const val TAB_RELAX = 1
