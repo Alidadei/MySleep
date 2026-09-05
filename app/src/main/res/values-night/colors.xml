@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 夜间更深一档的星光色 -->
+    <color name="color_primary">#414A94</color>
+    <color name="color_primary_dark">#2B3161</color>
+    <color name="color_accent">#E7C97F</color>
+</resources>

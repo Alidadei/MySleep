@@ -125,13 +125,14 @@ class MainActivity : SimpleActivity() {
 
     @SuppressLint("NewApi")
     private fun checkShortcuts() {
-        val appIconColor = config.appIconColor
-        if (config.lastHandledShortcutColor != appIconColor) {
-            val stopWatchShortcutInfo = getLaunchStopwatchShortcut(appIconColor)
+        // fixed brand gold, matching the moon launcher icon
+        val shortcutColor = 0xFFF2D38B.toInt()
+        if (config.lastHandledShortcutColor != shortcutColor) {
+            val stopWatchShortcutInfo = getLaunchStopwatchShortcut(shortcutColor)
 
             try {
                 shortcutManager.dynamicShortcuts = listOf(stopWatchShortcutInfo)
-                config.lastHandledShortcutColor = appIconColor
+                config.lastHandledShortcutColor = shortcutColor
             } catch (ignored: Exception) {
             }
         }

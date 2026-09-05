@@ -42,6 +42,13 @@
 Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠站台（Sleep Station）。
 包名保持 `org.fossify.clock`，如需独立包名请全局重构后再上架。
 
+## 品牌视觉（v1.0.3）
+- 启动图标：自适应图标重绘为"新月 + 四芒星光"（深夜渐变底 + 柔金月光 + 微光辉光），
+  含 monochrome（Android 13+ 主题图标）；移除上游 19 色变体与全部 activity-alias
+- 界面调色板：覆盖 `color_primary / color_primary_dark / color_accent`
+  为星光色系（深星蓝紫 #4E57A5 × 柔金 #E7C97F，夜间更深一档）
+- 桌面长按快捷方式（秒表）改为固定品牌金，不再跟随旧的多色图标系统
+
 ## 已知上游兼容问题（已修复）
 - commons 6.1.6 的 `Context.getSelectedDaysString` 会把 `getStringArray().toList()`
   （`Arrays$ArrayList`）强转为 `java.util.ArrayList`，闹钟列表一渲染必崩。

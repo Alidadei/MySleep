@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 柔和星光色系：深星蓝紫 + 柔金 -->
+    <color name="color_primary">#4E57A5</color>
+    <color name="color_primary_dark">#333A6E</color>
+    <color name="color_accent">#E7C97F</color>
+</resources>

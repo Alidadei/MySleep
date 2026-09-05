@@ -1,3 +1,78 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="512" android:viewportHeight="512">
-    <path android:fillColor="#ffffff" android:pathData="M267 251.6V212q0-4.68-3.16-7.84Q260.67 201 256 201q-4.68 0-7.84 3.16T245 212v43.72q0 2.2 0.82 4.26 0.82 2.06 2.47 3.71l36.3 36.3q3.03 3.03 7.7 3.03 4.68 0 7.7-3.03 3.03-3.03 3.03-7.7 0-4.68-3.03-7.7zM256 366q-22.83 0-42.9-8.66-20.08-8.67-34.92-23.51-14.86-14.85-23.52-34.93Q146 278.83 146 256t8.66-42.9q8.66-20.08 23.51-34.92 14.85-14.85 34.92-23.51Q233.18 146 256 146q22.83 0 42.9 8.66 20.08 8.66 34.92 23.51 14.85 14.85 23.51 34.92Q366 233.18 366 256q0 22.83-8.66 42.9-8.66 20.08-23.51 34.92-14.85 14.85-34.92 23.51Q278.83 366 256 366zm0-110zm0 88q36.58 0 62.29-25.71T344 256q0-36.57-25.71-62.29Q292.58 168 256 168q-36.57 0-62.29 25.71Q168 219.43 168 256q0 36.58 25.71 62.29Q219.43 344 256 344z" android:strokeWidth="0.275"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- soft glow behind the moon -->
+    <path android:pathData="M54,54 m-30,0 a30,30 0 1,1 60,0 a30,30 0 1,1 -60,0">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="54"
+                android:gradientRadius="30">
+                <item android:offset="0" android:color="#38F6E7C1" />
+                <item android:offset="1" android:color="#00F6E7C1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- crescent moon -->
+    <group
+        android:scaleX="2.4"
+        android:scaleY="2.4"
+        android:translateX="25.2"
+        android:translateY="25.2">
+        <path android:pathData="M12.34,2.02C6.59,1.82 2,6.42 2,12c0,5.52 4.48,10 10,10 3.71,0 6.93,-2.02 8.66,-5.02 -7.51,-0.25 -12.09,-8.43 -8.32,-14.96z">
+            <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="2"
+                    android:startY="2"
+                    android:endX="20"
+                    android:endY="22">
+                    <item android:offset="0" android:color="#FFFFF3D4" />
+                    <item android:offset="1" android:color="#FFF0C975" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+
+    <!-- four-point sparkles -->
+    <group
+        android:translateX="73"
+        android:translateY="37"
+        android:scaleX="0.9"
+        android:scaleY="0.9">
+        <path
+            android:fillColor="#FFFFF6DC"
+            android:pathData="M0,-6 C0.7,-1.7 1.7,-0.7 6,0 C1.7,0.7 0.7,1.7 0,6 C-0.7,1.7 -1.7,0.7 -6,0 C-1.7,-0.7 -0.7,-1.7 0,-6 Z" />
+    </group>
+    <group
+        android:translateX="35"
+        android:translateY="47"
+        android:scaleX="0.55"
+        android:scaleY="0.55">
+        <path
+            android:fillColor="#CCEAE6FF"
+            android:pathData="M0,-6 C0.7,-1.7 1.7,-0.7 6,0 C1.7,0.7 0.7,1.7 0,6 C-0.7,1.7 -1.7,0.7 -6,0 C-1.7,-0.7 -0.7,-1.7 0,-6 Z" />
+    </group>
+    <group
+        android:translateX="69"
+        android:translateY="71"
+        android:scaleX="0.65"
+        android:scaleY="0.65">
+        <path
+            android:fillColor="#CCFFF6DC"
+            android:pathData="M0,-6 C0.7,-1.7 1.7,-0.7 6,0 C1.7,0.7 0.7,1.7 0,6 C-0.7,1.7 -1.7,0.7 -6,0 C-1.7,-0.7 -0.7,-1.7 0,-6 Z" />
+    </group>
+
+    <!-- distant star dots -->
+    <path
+        android:fillColor="#A6D9DCFF"
+        android:pathData="M44,30 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0" />
+    <path
+        android:fillColor="#8CD9DCFF"
+        android:pathData="M63,73 m-1.1,0 a1.1,1.1 0 1,1 2.2,0 a1.1,1.1 0 1,1 -2.2,0" />
 </vector>

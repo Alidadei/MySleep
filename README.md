@@ -3,6 +3,8 @@
 到点自动亮起手电筒、用"光"把你叫醒的安卓闹钟——同时完整兼容传统铃声闹钟。
 手机秒变"唤醒灯"，宿舍早起不吵室友，冬天夜里不用摸黑找灯。
 
+> 全新月亮星星图标 + 柔和星光色系（深星蓝紫 × 柔金），整体氛围为夜晚而生。
+
 > 基于 [Fossify Clock](https://github.com/FossifyOrg/Clock)（GPL-3.0）二次开发，
 > 亮灯思路参考 [Flashy Alarm](https://github.com/yahyatinani/flashy-alarm)（GPL-3.0）。
 
