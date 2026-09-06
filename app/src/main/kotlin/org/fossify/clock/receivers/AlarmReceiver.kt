@@ -60,6 +60,17 @@ class AlarmReceiver : BroadcastReceiver() {
                 // the channel vibrates even if the foreground service is blocked
                 AlarmNotificationHelper(context).postAlertNotification(alarm)
                 ScreenWaker.wake(context, WAKELOCK_TAG)
+                try {
+                    context.startActivity(
+                        Intent(context, org.fossify.clock.activities.AlarmActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            putExtra(org.fossify.clock.helpers.ALARM_ID, alarm.id)
+                        }
+                    )
+                    RingDiagnostics.log(context, "已尝试直接拉起响铃页")
+                } catch (e: Exception) {
+                    RingDiagnostics.log(context, "直接拉起响铃页异常: ${e.message}")
+                }
                 if (alarm.vibrate) {
                     emergencyVibrate(context)
                 }

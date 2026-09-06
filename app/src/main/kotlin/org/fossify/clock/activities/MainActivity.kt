@@ -150,6 +150,20 @@ class MainActivity : SimpleActivity() {
             }
         }
 
+        if (Build.VERSION.SDK_INT >= 34) {
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (!nm.canUseFullScreenIntent()) {
+                permissionSteps.add {
+                    settingsIntentLauncher.launch(
+                        Intent(
+                            android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                            Uri.parse("package:$packageName")
+                        )
+                    )
+                }
+            }
+        }
+
         if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
             permissionSteps.add {
                 settingsIntentLauncher.launch(

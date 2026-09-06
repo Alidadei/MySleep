@@ -531,6 +531,13 @@ class SettingsActivity : SimpleActivity() {
             .append(if (nm.areNotificationsEnabled()) "ON" else "OFF")
             .append("\n")
         val ringerMode = (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).ringerMode
+        if (Build.VERSION.SDK_INT >= 34) {
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            sb.append(getString(R.string.diag_fsi_line)).append(": ")
+                .append(if (nm.canUseFullScreenIntent()) "ON" else "OFF (blocks full-screen alarm page)")
+                .append("\n")
+        }
+
         sb.append(getString(R.string.diag_ringer_line)).append(": ")
             .append(
                 when (ringerMode) {
