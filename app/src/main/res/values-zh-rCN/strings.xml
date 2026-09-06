@@ -60,7 +60,9 @@
     <string name="permissions_setup">一键开启所需权限</string>
     <string name="permissions_setup_confirm">将依次打开：通知、精确闹钟、电池优化、悬浮窗、自启动。每完成一项会自动进入下一项。</string>
     <string name="permissions_setup_done">权限配置完成</string>
-    <string name="vibration_test">振动自检</string>
+    <string name="vibration_test">振动自检（触感）</string>
+    <string name="notif_vib_test">振动自检（通知）</string>
+    <string name="notif_vib_test_off_hint">通知也没振动。请检查：系统设置→通知管理→睡眠站台→开启"闹钟"渠道的振动；以及声音与振动里的"通知振动"总开关</string>
     <string name="vibration_test_feel">刚刚触发了一次 1.5 秒的测试振动，你感觉到了吗？</string>
     <string name="vibration_test_yes">感觉到了</string>
     <string name="vibration_test_no">没有</string>

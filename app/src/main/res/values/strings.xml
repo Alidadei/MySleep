@@ -66,7 +66,9 @@
     <string name="permissions_setup">Set up all permissions at once</string>
     <string name="permissions_setup_confirm">The following screens will open one by one: notifications, exact alarms, battery optimization, display over other apps and autostart. Each step continues automatically after you finish it.</string>
     <string name="permissions_setup_done">Permission setup finished</string>
-    <string name="vibration_test">Vibration self-test</string>
+    <string name="vibration_test">Vibration self-test (haptics)</string>
+    <string name="notif_vib_test">Vibration self-test (notification)</string>
+    <string name="notif_vib_test_off_hint">No vibration. Check system Settings > Notifications > Sleep Station > enable vibration for the alarm channel</string>
     <string name="vibration_test_feel">A 1.5-second test vibration was just fired. Did you feel it?</string>
     <string name="vibration_test_yes">Yes</string>
     <string name="vibration_test_no">No</string>

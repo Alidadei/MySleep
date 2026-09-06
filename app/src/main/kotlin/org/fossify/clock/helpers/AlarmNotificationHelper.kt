@@ -144,11 +144,6 @@ class AlarmNotificationHelper(private val context: Context) {
         val hasSound = !alarm.lightOnly && alarm.soundUri != SILENT
         val channelId = "alarm_alert_${(alarm.soundUri to alarm.vibrate).hashCode()}"
 
-        try {
-            context.notificationManager.deleteNotificationChannel(channelId)
-        } catch (e: Exception) {
-        }
-
         val channel = NotificationChannel(
             channelId,
             context.getString(org.fossify.commons.R.string.alarm),

@@ -52,6 +52,7 @@ import org.fossify.commons.helpers.MINUTE_SECONDS
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.commons.helpers.TAB_LAST_USED
 import org.fossify.commons.helpers.ensureBackgroundThread
+import org.fossify.commons.extensions.notificationManager
 import org.fossify.commons.helpers.isTiramisuPlus
 import org.fossify.commons.models.RadioItem
 import java.time.DayOfWeek
@@ -104,6 +105,9 @@ class SettingsActivity : SimpleActivity() {
         }
         binding.settingsVibrationTestHolder.setOnClickListener {
             startVibrationSelfTest()
+        }
+        binding.settingsNotifVibTestHolder.setOnClickListener {
+            startNotificationVibrationTest()
         }
 
         setupCustomizeColors()
@@ -446,6 +450,54 @@ class SettingsActivity : SimpleActivity() {
         if (!invoked) {
             toast(R.string.vibration_test_failed)
         }
+    }
+
+
+    /** Posts a test notification on a vibration-enabled channel - the same
+     *  system-driven path messaging apps use. Distinguishes channel vibration
+     *  from in-process haptics. */
+    private fun startNotificationVibrationTest() {
+        try {
+            val channelId = "vibration_test_channel"
+            val channel = android.app.NotificationChannel(
+                channelId,
+                getString(R.string.notif_vib_test),
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                setSound(null, null)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 800, 200, 800)
+                setBypassDnd(true)
+            }
+            notificationManager.deleteNotificationChannel(channelId)
+            notificationManager.createNotificationChannel(channel)
+
+            val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(org.fossify.clock.R.drawable.ic_alarm_vector)
+                .setContentTitle(getString(R.string.notif_vib_test))
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
+                .build()
+            notificationManager.notify(10008, notification)
+
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                notificationManager.cancel(10008)
+            }, 5000)
+        } catch (e: Exception) {
+            RingDiagnostics.log(this, "通知振动自检异常: ${e.message}")
+        }
+
+        getAlertDialogBuilder()
+            .setTitle(R.string.notif_vib_test)
+            .setMessage(R.string.vibration_test_feel)
+            .setPositiveButton(R.string.vibration_test_yes) { _, _ ->
+                RingDiagnostics.log(this, "通知振动自检:用户有感觉")
+                toast(R.string.vibration_test_ok)
+            }
+            .setNegativeButton(R.string.vibration_test_no) { _, _ ->
+                RingDiagnostics.log(this, "通知振动自检:用户无感觉")
+                toast(R.string.notif_vib_test_off_hint)
+            }
+            .show()
     }
 
     private fun exportData(outputUri: Uri) {
