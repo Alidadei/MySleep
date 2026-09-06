@@ -92,6 +92,12 @@ class Config(context: Context) : BaseConfig(context) {
             putBoolean(AUTOSTART_PROMPT_SHOWN, autostartPromptShown)
         }
 
+    var backgroundPopupPromptShown: Boolean
+        get() = prefs.getBoolean(BACKGROUND_POPUP_PROMPT_SHOWN, false)
+        set(backgroundPopupPromptShown) = prefs.edit {
+            putBoolean(BACKGROUND_POPUP_PROMPT_SHOWN, backgroundPopupPromptShown)
+        }
+
     var increaseVolumeGradually: Boolean
         get() = prefs.getBoolean(INCREASE_VOLUME_GRADUALLY, true)
         set(increaseVolumeGradually) = prefs.edit {

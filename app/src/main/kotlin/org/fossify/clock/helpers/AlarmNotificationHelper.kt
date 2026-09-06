@@ -132,6 +132,7 @@ class AlarmNotificationHelper(private val context: Context) {
             )
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setFullScreenIntent(pendingIntent, true)
+            .setDeleteIntent(context.getStopAlarmPendingIntent(alarm))
             .build()
 
         notification.flags = notification.flags or Notification.FLAG_INSISTENT

@@ -401,6 +401,18 @@ class SettingsActivity : SimpleActivity() {
             AutoStartHelper.getIntent(this)?.let { settingsIntentLauncher.launch(it) }
                 ?: runNextPermissionStep()
         }
+
+        if (!config.backgroundPopupPromptShown) {
+            config.backgroundPopupPromptShown = true
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
     }
 
     private fun runNextPermissionStep() {

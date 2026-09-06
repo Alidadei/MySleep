@@ -109,7 +109,6 @@
         android:id="@+id/reminder_guide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:alpha="0"
         android:text="@string/swipe_right_to_dismiss"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

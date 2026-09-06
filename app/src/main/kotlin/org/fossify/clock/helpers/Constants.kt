@@ -63,6 +63,7 @@ const val STOPWATCH_RUNNING_NOTIFICATION_ID = 10001
 const val UPCOMING_ALARM_INTENT_ID = 10002
 const val UPCOMING_ALARM_NOTIFICATION_ID = 10003
 const val AUTOSTART_PROMPT_SHOWN = "autostart_prompt_shown"
+const val BACKGROUND_POPUP_PROMPT_SHOWN = "background_popup_prompt_shown"
 
 const val OPEN_TAB = "open_tab"
 const val TAB_RELAX = 1
