@@ -9,15 +9,18 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import org.fossify.clock.extensions.alarmController
-import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.hideNotification
 import org.fossify.commons.helpers.isOreoPlus
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Last-resort ring UI: a full-screen overlay window drawn with the
@@ -26,10 +29,17 @@ import org.fossify.commons.helpers.isOreoPlus
  * overlay permission is granted (the MIUI "后台弹出界面" op is separate), so
  * when the real ring page never arrives, this fallback still gives the user
  * a visible, tappable ringing screen - above the lock screen too.
+ *
+ * Gestures mirror the standard ring page: swipe right to dismiss,
+ * swipe left to snooze (alarms only). Buttons stay as a visible affordance.
  */
 object RingOverlayHelper {
 
     private var currentView: View? = null
+
+    /** Fixed snooze for the fallback page (user-requested); the standard
+     *  ring page keeps using the configured snooze duration. */
+    private const val OVERLAY_SNOOZE_MINUTES = 5
 
     fun isShowing() = currentView != null
 
@@ -59,7 +69,7 @@ object RingOverlayHelper {
     fun showAlarmOverlay(context: Context, alarm: org.fossify.clock.models.Alarm) {
         val label = alarm.label.ifEmpty { context.getString(org.fossify.commons.R.string.alarm) }
         val timeText = try {
-            context.getFormattedTimeText()
+            getFormattedTimeText()
         } catch (e: Exception) {
             ""
         }
@@ -69,7 +79,6 @@ object RingOverlayHelper {
             subtitle = timeText.ifEmpty { "闹钟响铃中" },
             hint = "响铃页被系统拦截，这是兜底界面。建议：设置 → 一键开启所需权限，开启“后台弹出界面”和“锁屏显示”",
             showSnooze = true,
-            snoozeMinutes = context.config.snoozeTime,
             onStop = {
                 try {
                     TorchHelper.setTorch(context, false)
@@ -81,8 +90,8 @@ object RingOverlayHelper {
             onSnooze = {
                 try {
                     TorchHelper.setTorch(context, false)
-                    context.alarmController.snoozeAlarm(alarm.id, context.config.snoozeTime)
-                    RingDiagnostics.log(context, "悬浮窗兜底：已贪睡 ${context.config.snoozeTime} 分钟")
+                    context.alarmController.snoozeAlarm(alarm.id, OVERLAY_SNOOZE_MINUTES)
+                    RingDiagnostics.log(context, "悬浮窗兜底：已贪睡 $OVERLAY_SNOOZE_MINUTES 分钟")
                 } catch (e: Exception) {
                 }
             }
@@ -145,7 +154,7 @@ object RingOverlayHelper {
         }
     }
 
-    private fun Context.getFormattedTimeText(): String {
+    private fun getFormattedTimeText(): String {
         val now = java.util.Calendar.getInstance()
         val hour = now.get(java.util.Calendar.HOUR_OF_DAY)
         val minute = now.get(java.util.Calendar.MINUTE)
@@ -158,7 +167,6 @@ object RingOverlayHelper {
         subtitle: String,
         hint: String,
         showSnooze: Boolean,
-        snoozeMinutes: Int = 0,
         onStop: () -> Unit,
         onSnooze: (() -> Unit)? = null
     ) {
@@ -174,14 +182,73 @@ object RingOverlayHelper {
             try {
                 val density = context.resources.displayMetrics.density
                 fun dp(v: Int) = (v * density + 0.5f).toInt()
-                fun sp(v: Int) = (v * context.resources.displayMetrics.scaledDensity + 0.5f).toInt()
+                val screenW = context.resources.displayMetrics.widthPixels
+                val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+                val swipeThreshold = max(dp(90), screenW / 4)
 
                 val root = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER
                     setBackgroundColor(0xF20D0F1A.toInt())
-                    setClickable(true)
-                    setOnTouchListener { _, _ -> true }
+                    isClickable = true
+                }
+
+                var downX = 0f
+                var downY = 0f
+                var swiping = false
+
+                fun finishSwipe(toRight: Boolean, action: () -> Unit) {
+                    root.animate()
+                        .translationX((if (toRight) screenW else -screenW).toFloat())
+                        .alpha(0f)
+                        .setDuration(160L)
+                        .withEndAction {
+                            dismiss(context)
+                            action()
+                        }
+                        .start()
+                }
+
+                root.setOnTouchListener { v, event ->
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN -> {
+                            downX = event.rawX
+                            downY = event.rawY
+                            swiping = false
+                            true
+                        }
+
+                        MotionEvent.ACTION_MOVE -> {
+                            val dx = event.rawX - downX
+                            val dy = event.rawY - downY
+                            if (!swiping && abs(dx) > touchSlop && abs(dx) > abs(dy)) {
+                                swiping = true
+                            }
+                            if (swiping) {
+                                v.translationX = dx
+                                v.alpha = max(0.3f, 1f - abs(dx) / screenW)
+                            }
+                            true
+                        }
+
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            val dx = event.rawX - downX
+                            when {
+                                swiping && dx > swipeThreshold ->
+                                    finishSwipe(true, onStop)
+
+                                swiping && -dx > swipeThreshold && showSnooze && onSnooze != null ->
+                                    finishSwipe(false, onSnooze)
+
+                                else ->
+                                    v.animate().translationX(0f).alpha(1f).setDuration(140L).start()
+                            }
+                            swiping = false
+                            true
+                        }
+
+                        else -> false
+                    }
                 }
 
                 val titleView = TextView(context).apply {
@@ -198,6 +265,17 @@ object RingOverlayHelper {
                     textSize = 15f
                     gravity = Gravity.CENTER
                     setPadding(dp(24), dp(6), dp(24), 0)
+                }
+                val guideView = TextView(context).apply {
+                    text = if (showSnooze && onSnooze != null) {
+                        "右滑关闭 · 左滑贪睡 $OVERLAY_SNOOZE_MINUTES 分钟"
+                    } else {
+                        "右滑关闭"
+                    }
+                    setTextColor(0xCCFFFFFF.toInt())
+                    textSize = 14f
+                    gravity = Gravity.CENTER
+                    setPadding(dp(24), dp(14), dp(24), 0)
                 }
 
                 val stopButton = TextView(context).apply {
@@ -222,13 +300,14 @@ object RingOverlayHelper {
 
                 root.addView(titleView)
                 root.addView(subtitleView)
-                root.addView(Space(context).apply { layoutParams = LinearLayout.LayoutParams(0, dp(44)) })
+                root.addView(guideView)
+                root.addView(Space(context).apply { layoutParams = LinearLayout.LayoutParams(0, dp(36)) })
                 root.addView(stopButton)
 
                 if (showSnooze && onSnooze != null) {
                     root.addView(Space(context).apply { layoutParams = LinearLayout.LayoutParams(0, dp(18)) })
                     val snoozeButton = TextView(context).apply {
-                        text = "贪睡 $snoozeMinutes 分钟"
+                        text = "贪睡 $OVERLAY_SNOOZE_MINUTES 分钟"
                         setTextColor(Color.WHITE)
                         textSize = 15f
                         gravity = Gravity.CENTER
