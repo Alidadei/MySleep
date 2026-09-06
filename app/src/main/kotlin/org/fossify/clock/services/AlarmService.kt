@@ -202,6 +202,7 @@ class AlarmService : Service() {
         vibrator?.cancel()
         vibrator = null
         TorchHelper.setTorch(this, false)
+        org.fossify.clock.helpers.RingOverlayHelper.dismiss(this)
 
         // Clear any scheduled auto-dismiss or torch assert messages
         autoDismissHandler.removeCallbacksAndMessages(null)

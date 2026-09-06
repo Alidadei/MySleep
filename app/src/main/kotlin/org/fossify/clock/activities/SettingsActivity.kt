@@ -386,9 +386,46 @@ class SettingsActivity : SimpleActivity() {
             }
         }
 
+        if (!Settings.canDrawOverlays(this)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= 34) {
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (!nm.canUseFullScreenIntent()) {
+                permissionSteps.add {
+                    settingsIntentLauncher.launch(
+                        Intent(
+                            android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                            Uri.parse("package:$packageName")
+                        )
+                    )
+                }
+            }
+        }
+
         permissionSteps.add {
             AutoStartHelper.getIntent(this)?.let { settingsIntentLauncher.launch(it) }
                 ?: runNextPermissionStep()
+        }
+
+        if (org.fossify.clock.helpers.MiuiHelper.isMiui()) {
+            val backgroundPopupOk = org.fossify.clock.helpers.MiuiHelper.opState(
+                this, org.fossify.clock.helpers.MiuiHelper.OP_BACKGROUND_START
+            ) == "ON"
+            val lockscreenOk = org.fossify.clock.helpers.MiuiHelper.opState(
+                this, org.fossify.clock.helpers.MiuiHelper.OP_LOCKSCREEN_DISPLAY
+            ) == "ON"
+            if (!backgroundPopupOk || !lockscreenOk) {
+                permissionSteps.add { launchMiuiPermissionEditor() }
+            }
         }
 
         if (!config.backgroundPopupPromptShown) {
@@ -410,6 +447,31 @@ class SettingsActivity : SimpleActivity() {
             return
         }
         permissionSteps.removeAt(0).invoke()
+    }
+
+    /** Opens MIUI's per-app permission editor (其他权限) where 后台弹出界面
+     *  and 锁屏显示 live; falls back to the app info page if the editor is
+     *  unreachable on this ROM. */
+    private fun launchMiuiPermissionEditor() {
+        val editor = org.fossify.clock.helpers.MiuiHelper.getPermissionEditorIntent(this)
+        if (editor == null) {
+            runNextPermissionStep()
+            return
+        }
+        try {
+            settingsIntentLauncher.launch(editor)
+        } catch (e: Exception) {
+            try {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            } catch (e2: Exception) {
+                runNextPermissionStep()
+            }
+        }
     }
 
 
@@ -531,19 +593,6 @@ class SettingsActivity : SimpleActivity() {
             .append(if (nm.areNotificationsEnabled()) "ON" else "OFF")
             .append("\n")
         val ringerMode = (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).ringerMode
-        // overlay is the system-whitelisted bypass for background activity
-        // launches: with it granted, the ring page pops over the lock screen
-        // even when the full-screen intent toggle is suppressed by the ROM
-        if (!Settings.canDrawOverlays(this)) {
-            permissionSteps.add {
-                settingsIntentLauncher.launch(
-                    Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
-                    )
-                )
-            }
-        }
 
         sb.append(getString(R.string.diag_overlay_line)).append(": ")
             .append(if (android.provider.Settings.canDrawOverlays(this)) "ON" else "OFF (needed to pop the ring page)")
@@ -554,6 +603,19 @@ class SettingsActivity : SimpleActivity() {
             sb.append(getString(R.string.diag_fsi_line)).append(": ")
                 .append(if (nm.canUseFullScreenIntent()) "ON" else "OFF (blocks full-screen alarm page)")
                 .append("\n")
+        }
+
+        if (org.fossify.clock.helpers.MiuiHelper.isMiui()) {
+            fun appendOpLine(nameRes: Int, op: Int) {
+                sb.append(getString(nameRes)).append(": ")
+                    .append(
+                        org.fossify.clock.helpers.MiuiHelper.opState(this, op) ?: "未知"
+                    )
+                    .append("\n")
+            }
+            appendOpLine(R.string.diag_miui_background_popup_line, org.fossify.clock.helpers.MiuiHelper.OP_BACKGROUND_START)
+            appendOpLine(R.string.diag_miui_lockscreen_line, org.fossify.clock.helpers.MiuiHelper.OP_LOCKSCREEN_DISPLAY)
+            appendOpLine(R.string.diag_miui_autostart_line, org.fossify.clock.helpers.MiuiHelper.OP_AUTO_START)
         }
 
         sb.append(getString(R.string.diag_ringer_line)).append(": ")

@@ -194,6 +194,18 @@ class MainActivity : SimpleActivity() {
                 ?: runNextPermissionStep()
         }
 
+        if (org.fossify.clock.helpers.MiuiHelper.isMiui()) {
+            val backgroundPopupOk = org.fossify.clock.helpers.MiuiHelper.opState(
+                this, org.fossify.clock.helpers.MiuiHelper.OP_BACKGROUND_START
+            ) == "ON"
+            val lockscreenOk = org.fossify.clock.helpers.MiuiHelper.opState(
+                this, org.fossify.clock.helpers.MiuiHelper.OP_LOCKSCREEN_DISPLAY
+            ) == "ON"
+            if (!backgroundPopupOk || !lockscreenOk) {
+                permissionSteps.add { launchMiuiPermissionEditor() }
+            }
+        }
+
         if (!config.backgroundPopupPromptShown) {
             config.backgroundPopupPromptShown = true
             permissionSteps.add {
@@ -203,6 +215,28 @@ class MainActivity : SimpleActivity() {
                         Uri.parse("package:$packageName")
                     )
                 )
+            }
+        }
+    }
+
+    private fun launchMiuiPermissionEditor() {
+        val editor = org.fossify.clock.helpers.MiuiHelper.getPermissionEditorIntent(this)
+        if (editor == null) {
+            runNextPermissionStep()
+            return
+        }
+        try {
+            settingsIntentLauncher.launch(editor)
+        } catch (e: Exception) {
+            try {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            } catch (e2: Exception) {
+                runNextPermissionStep()
             }
         }
     }

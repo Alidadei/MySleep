@@ -69,8 +69,17 @@ class AlarmReceiver : BroadcastReceiver() {
                     )
                     val overlayOn = android.provider.Settings.canDrawOverlays(context)
                     RingDiagnostics.log(context, "已尝试直接拉起响铃页 (悬浮窗=" + overlayOn + ")")
+                    // HyperOS swallows background activity starts even with the
+                    // overlay permission granted - fall back to an overlay ring
+                    // UI if the real page never reached the foreground
+                    org.fossify.clock.helpers.RingOverlayHelper.scheduleFallback(context) { appCtx ->
+                        org.fossify.clock.helpers.RingOverlayHelper.showAlarmOverlay(appCtx, alarm)
+                    }
                 } catch (e: Exception) {
                     RingDiagnostics.log(context, "直接拉起响铃页异常: ${e.message}")
+                    org.fossify.clock.helpers.RingOverlayHelper.scheduleFallback(context) { appCtx ->
+                        org.fossify.clock.helpers.RingOverlayHelper.showAlarmOverlay(appCtx, alarm)
+                    }
                 }
                 if (alarm.vibrate) {
                     emergencyVibrate(context)

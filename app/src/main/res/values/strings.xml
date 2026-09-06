@@ -66,13 +66,16 @@
     <string name="report_subtitle_empty">No wake-up records yet</string>
     <string name="alarms_reliability_section">Alarm reliability</string>
     <string name="permissions_setup">Set up all permissions at once</string>
-    <string name="permissions_setup_confirm">The following screens will open one by one: notifications, display over other apps, full-screen display, exact alarms, battery optimization, autostart and app info (enable Background pop-up and Display on lock screen there, so the full-screen alarm page can appear). Each step continues automatically after you finish it.</string>
+    <string name="permissions_setup_confirm">The following screens will open one by one: notifications, exact alarms, battery optimization, display over other apps, full-screen display, autostart, and the MIUI permission page (enable Background pop-up and Display on lock screen there, so the ring page can appear from the background and the lock screen). Each step continues automatically after you finish it.</string>
     <string name="permissions_setup_done">Permission setup finished</string>
     <string name="vibration_test">Vibration self-test (haptics)</string>
     <string name="alarm_vib_test">Vibration self-test (alarm class)</string>
     <string name="vibration_test_requires_31">Requires Android 12+</string>
     <string name="diag_fsi_line">Full-screen intent</string>
     <string name="diag_overlay_line">Display over other apps</string>
+    <string name="diag_miui_autostart_line">Autostart (MIUI)</string>
+    <string name="diag_miui_background_popup_line">Background pop-up (MIUI)</string>
+    <string name="diag_miui_lockscreen_line">Display on lock screen (MIUI)</string>
     <string name="diag_ringer_line">Ringer mode</string>
     <string name="diag_ringer_normal">normal</string>
     <string name="diag_ringer_vibrate">vibrate</string>

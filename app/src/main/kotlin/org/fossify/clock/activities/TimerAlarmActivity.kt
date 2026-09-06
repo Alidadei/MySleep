@@ -10,6 +10,7 @@ import org.fossify.clock.R
 import org.fossify.clock.databinding.ActivityTimerAlarmBinding
 import org.fossify.clock.extensions.hideNotification
 import org.fossify.clock.extensions.timerDb
+import org.fossify.clock.helpers.RingOverlayHelper
 import org.fossify.clock.helpers.TIMER_ID
 import org.fossify.clock.helpers.TorchHelper
 import org.fossify.commons.extensions.viewBinding
@@ -28,6 +29,8 @@ class TimerAlarmActivity : SimpleActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RingOverlayHelper.RingUiTracker.ringingActivityShowing = true
+        RingOverlayHelper.dismiss(this)
         binding = ActivityTimerAlarmBinding.inflate(layoutInflater)
         setContentView(binding.root)
         showOverLockscreen()
@@ -55,6 +58,11 @@ class TimerAlarmActivity : SimpleActivity() {
             stopEffects()
             finish()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        RingOverlayHelper.RingUiTracker.ringingActivityShowing = false
     }
 
     private fun showOverLockscreen() {

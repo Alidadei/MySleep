@@ -130,10 +130,19 @@ class App : FossifyApp(), LifecycleObserver {
                 startAlarmClassVibration()
             }
             org.fossify.clock.activities.TimerAlarmActivity.launch(this, event.timerId)
+            // HyperOS swallows background activity starts even with the overlay
+            // permission granted - fall back to an overlay ring UI if the real
+            // page never reached the foreground
+            org.fossify.clock.helpers.RingOverlayHelper.scheduleFallback(this) { appCtx ->
+                org.fossify.clock.helpers.RingOverlayHelper.showTimerOverlay(
+                    appCtx, event.timerId, timer.label
+                )
+            }
             Handler(Looper.getMainLooper()).postDelayed({
                 hideNotification(event.timerId)
                 TorchHelper.setTorch(this, false)
                 stopAlarmClassVibration()
+                org.fossify.clock.helpers.RingOverlayHelper.dismiss(this)
             }, config.timerMaxReminderSecs * 1000L)
         }
     }

@@ -60,13 +60,16 @@
     <string name="report_subtitle_empty">还没有起床记录</string>
     <string name="alarms_reliability_section">闹钟可靠性</string>
     <string name="permissions_setup">一键开启所需权限</string>
-    <string name="permissions_setup_confirm">将依次打开：通知、显示在其他应用上层、全屏显示、精确闹钟、电池优化、自启动、应用信息（在最后一步开启“后台弹出界面”和“锁屏显示”，闹钟全屏页面才能准时弹出）。每完成一项会自动进入下一项。</string>
+    <string name="permissions_setup_confirm">将依次打开：通知、精确闹钟、电池优化、显示在其他应用上层、全屏显示、自启动、小米“其他权限”页（开启“后台弹出界面”和“锁屏显示”，后台和锁屏时响铃页才能弹出）。每完成一项会自动进入下一项。</string>
     <string name="permissions_setup_done">权限配置完成</string>
     <string name="vibration_test">振动自检（触感）</string>
     <string name="alarm_vib_test">振动自检（闹钟级）</string>
     <string name="vibration_test_requires_31">需要 Android 12 以上</string>
     <string name="diag_fsi_line">全屏意图权限</string>
     <string name="diag_overlay_line">显示在其他应用上层</string>
+    <string name="diag_miui_autostart_line">自启动（小米）</string>
+    <string name="diag_miui_background_popup_line">后台弹出界面（小米）</string>
+    <string name="diag_miui_lockscreen_line">锁屏显示（小米）</string>
     <string name="diag_ringer_line">响铃模式</string>
     <string name="diag_ringer_normal">正常</string>
     <string name="diag_ringer_vibrate">振动</string>

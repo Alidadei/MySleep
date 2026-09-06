@@ -18,6 +18,7 @@ import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.getFormattedTime
 import org.fossify.clock.helpers.ALARM_ID
+import org.fossify.clock.helpers.RingOverlayHelper
 import org.fossify.clock.helpers.getPassedSeconds
 import org.fossify.clock.models.Alarm
 import org.fossify.clock.models.AlarmEvent
@@ -56,6 +57,8 @@ class AlarmActivity : SimpleActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RingOverlayHelper.RingUiTracker.ringingActivityShowing = true
+        RingOverlayHelper.dismiss(this)
         setContentView(binding.root)
         showOverLockscreen()
         updateTextColors(binding.root)
@@ -182,6 +185,7 @@ class AlarmActivity : SimpleActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        RingOverlayHelper.RingUiTracker.ringingActivityShowing = false
         swipeGuideFadeHandler.removeCallbacksAndMessages(null)
         screenRampAnimator?.cancel()
         EventBus.getDefault().unregister(this)
