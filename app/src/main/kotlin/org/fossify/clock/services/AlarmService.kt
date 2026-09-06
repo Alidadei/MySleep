@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.os.CombinedVibration
 import android.os.VibrationEffect
 import android.os.Vibrator
 import org.fossify.clock.extensions.alarmController
@@ -38,6 +39,8 @@ class AlarmService : Service() {
 
         const val ACTION_START_ALARM = "org.fossify.clock.START_ALARM"
         const val ACTION_STOP_ALARM = "org.fossify.clock.STOP_ALARM"
+
+        var previousInterruptionFilter: Int? = null
     }
 
     private var activeAlarm: Alarm? = null
@@ -145,21 +148,31 @@ class AlarmService : Service() {
     /** Immediate in-process vibration kick on top of the channel vibration. */
     private fun startVibration() {
         try {
-            val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
                 val manager = getSystemService(VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-                manager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(VIBRATOR_SERVICE) as Vibrator
-            }
-
-            this.vibrator = vibrator
-            RingDiagnostics.log(this, "进程内振动已调用")
-            vibrator.vibrate(
-                VibrationEffect.createWaveform(
-                    longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
+                val vibrator = manager.defaultVibrator
+                this.vibrator = vibrator
+                RingDiagnostics.log(this, "进程内振动已调用（闹钟级）")
+                manager.vibrate(
+                    CombinedVibration.createParallel(
+                        VibrationEffect.createWaveform(
+                            longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
+                        )
+                    ),
+                    android.os.VibrationAttributes.Builder()
+                        .setUsage(android.os.VibrationAttributes.USAGE_ALARM)
+                        .build()
                 )
-            )
+            } else {
+                val vibrator = @Suppress("DEPRECATION")
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
+                this.vibrator = vibrator
+                vibrator.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
+                    )
+                )
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -177,6 +190,14 @@ class AlarmService : Service() {
     }
 
     private fun stopRingAndCleanup() {
+        previousInterruptionFilter?.let { previous ->
+            val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (nm.isNotificationPolicyAccessGranted) {
+                nm.setInterruptionFilter(previous)
+            }
+        }
+        previousInterruptionFilter = null
+
         notificationManager.cancel(ALARM_ALERT_NOTIFICATION_ID)
         vibrator?.cancel()
         vibrator = null

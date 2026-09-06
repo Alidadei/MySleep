@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.CombinedVibration
 import android.os.VibrationEffect
 import android.provider.Settings
 import android.content.Intent
@@ -108,6 +109,9 @@ class SettingsActivity : SimpleActivity() {
         }
         binding.settingsNotifVibTestHolder.setOnClickListener {
             startNotificationVibrationTest()
+        }
+        binding.settingsAlarmVibTestHolder.setOnClickListener {
+            startAlarmClassVibrationTest()
         }
 
         setupCustomizeColors()
@@ -420,7 +424,13 @@ class SettingsActivity : SimpleActivity() {
                 @Suppress("DEPRECATION")
                 getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
             }
-            vibrator.vibrate(VibrationEffect.createOneShot(1500, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(
+                VibrationEffect.createWaveform(
+                    longArrayOf(0, 400, 150, 400, 150, 400),
+                    intArrayOf(0, 255, 0, 255, 0, 255),
+                    -1
+                )
+            )
             invoked = true
             RingDiagnostics.log(this, "自检振动已调用")
         } catch (e: Exception) {
@@ -495,9 +505,116 @@ class SettingsActivity : SimpleActivity() {
             }
             .setNegativeButton(R.string.vibration_test_no) { _, _ ->
                 RingDiagnostics.log(this, "通知振动自检:用户无感觉")
-                toast(R.string.notif_vib_test_off_hint)
+                showNotificationEnvironmentDiagnostics()
             }
             .show()
+    }
+
+
+    /** Full notification-environment report: DND state, per-channel vibration,
+     *  plus a shortcut to grant DND access (the gate that suppresses both
+     *  haptics and notification vibration on HyperOS). */
+    private fun showNotificationEnvironmentDiagnostics() {
+        val nm = notificationManager
+        val dndFilter = nm.currentInterruptionFilter
+        val dndOn = dndFilter != android.app.NotificationManager.INTERRUPTION_FILTER_ALL
+
+        val sb = StringBuilder()
+        sb.append(getString(R.string.diag_dnd_line)).append(": ")
+            .append(
+                if (dndOn) getString(R.string.diag_dnd_on)
+                else getString(R.string.diag_dnd_off)
+            )
+            .append("\n")
+        sb.append(getString(R.string.diag_notif_enabled_line)).append(": ")
+            .append(if (nm.areNotificationsEnabled()) "ON" else "OFF")
+            .append("\n")
+        val ringerMode = (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).ringerMode
+        sb.append(getString(R.string.diag_ringer_line)).append(": ")
+            .append(
+                when (ringerMode) {
+                    android.media.AudioManager.RINGER_MODE_SILENT -> getString(R.string.diag_ringer_silent)
+                    android.media.AudioManager.RINGER_MODE_VIBRATE -> getString(R.string.diag_ringer_vibrate)
+                    else -> getString(R.string.diag_ringer_normal)
+                }
+            )
+            .append("\n\n")
+
+        nm.notificationChannels?.forEach { channel ->
+            sb.append("[").append(channel.name).append("] ")
+                .append(getString(R.string.diag_channel_vib)).append("=")
+                .append(channel.shouldVibrate())
+                .append("\n")
+        }
+
+        val hasLog = RingDiagnostics.getLog(this).isNotEmpty()
+        if (hasLog) {
+            sb.append("\n---\n")
+            sb.append(RingDiagnostics.getLog(this).joinToString("\n"))
+        }
+
+        val dialogBuilder = getAlertDialogBuilder()
+            .setTitle(R.string.diagnostics_title)
+            .setMessage(sb.toString())
+            .setPositiveButton(org.fossify.commons.R.string.ok, null)
+
+        if (dndOn) {
+            dialogBuilder.setNeutralButton(R.string.diag_grant_dnd) { _, _ ->
+                try {
+                    startActivity(
+                        Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                    )
+                } catch (e: Exception) {
+                }
+            }
+        }
+
+        dialogBuilder.show()
+    }
+
+
+    /** Alarm-class vibration (USAGE_ALARM): on HyperOS this is the same
+     *  privilege tier the stock clock uses, bypassing silent-mode haptic gates. */
+    private fun startAlarmClassVibrationTest() {
+        var invoked = false
+        try {
+            if (Build.VERSION.SDK_INT >= 31) {
+                val manager =
+                    getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                val attrs = android.os.VibrationAttributes.Builder()
+                    .setUsage(android.os.VibrationAttributes.USAGE_ALARM)
+                    .build()
+                manager.vibrate(
+                    CombinedVibration.createParallel(
+                        VibrationEffect.createWaveform(
+                            longArrayOf(0, 500, 200, 500, 200, 500), -1
+                        )
+                    ),
+                    attrs
+                )
+                invoked = true
+                RingDiagnostics.log(this, "闹钟级振动已调用")
+            } else {
+                toast(R.string.vibration_test_requires_31)
+            }
+        } catch (e: Exception) {
+            RingDiagnostics.log(this, "闹钟级振动异常: ${e.message}")
+        }
+
+        if (invoked) {
+            getAlertDialogBuilder()
+                .setTitle(R.string.alarm_vib_test)
+                .setMessage(R.string.vibration_test_feel)
+                .setPositiveButton(R.string.vibration_test_yes) { _, _ ->
+                    RingDiagnostics.log(this, "闹钟级自检:用户有感觉")
+                    toast(R.string.vibration_test_ok)
+                }
+                .setNegativeButton(R.string.vibration_test_no) { _, _ ->
+                    RingDiagnostics.log(this, "闹钟级自检:用户无感觉")
+                    showNotificationEnvironmentDiagnostics()
+                }
+                .show()
+        }
     }
 
     private fun exportData(outputUri: Uri) {
