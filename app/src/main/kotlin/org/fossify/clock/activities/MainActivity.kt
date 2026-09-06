@@ -161,17 +161,6 @@ class MainActivity : SimpleActivity() {
             }
         }
 
-        if (!Settings.canDrawOverlays(this)) {
-            permissionSteps.add {
-                settingsIntentLauncher.launch(
-                    Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
-                    )
-                )
-            }
-        }
-
         permissionSteps.add {
             AutoStartHelper.getIntent(this)?.let { settingsIntentLauncher.launch(it) }
                 ?: runNextPermissionStep()

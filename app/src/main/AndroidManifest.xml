@@ -178,6 +178,8 @@
 
         <receiver android:name=".receivers.HideTimerReceiver" />
 
+        <receiver android:name=".receivers.TimerAlarmReceiver" />
+
         <receiver android:name=".receivers.StopAlarmReceiver" />
 
         <receiver android:name=".receivers.SkipUpcomingAlarmReceiver" />

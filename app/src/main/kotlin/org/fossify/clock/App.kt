@@ -14,6 +14,8 @@ import org.fossify.clock.extensions.hideNotification
 import org.fossify.clock.extensions.timerHelper
 import org.fossify.clock.models.TimerEvent
 import org.fossify.clock.models.TimerState
+import org.fossify.clock.extensions.cancelTimerFinish
+import org.fossify.clock.extensions.scheduleTimerFinish
 import org.fossify.clock.helpers.ScreenWaker
 import org.fossify.clock.helpers.TorchHelper
 import org.fossify.clock.services.TimerStopService
@@ -71,6 +73,7 @@ class App : FossifyApp(), LifecycleObserver {
     fun onMessageEvent(event: TimerEvent.Reset) {
         updateTimerState(event.timerId, TimerState.Idle)
         countDownTimers[event.timerId]?.cancel()
+        cancelTimerFinish(event.timerId)
         TorchHelper.setTorch(this, false)
     }
 
@@ -95,10 +98,12 @@ class App : FossifyApp(), LifecycleObserver {
             }
         }.start()
         countDownTimers[event.timerId] = countDownTimer
+        scheduleTimerFinish(event.timerId, event.duration)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: TimerEvent.Finish) {
+        cancelTimerFinish(event.timerId)
         timerHelper.getTimer(event.timerId) { timer ->
             val pendingIntent = getOpenTimerTabIntent(event.timerId)
             val notification = getTimerNotification(timer, pendingIntent)
@@ -125,6 +130,7 @@ class App : FossifyApp(), LifecycleObserver {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: TimerEvent.Pause) {
+        cancelTimerFinish(event.timerId)
         timerHelper.getTimer(event.timerId) { timer ->
             updateTimerState(
                 event.timerId,

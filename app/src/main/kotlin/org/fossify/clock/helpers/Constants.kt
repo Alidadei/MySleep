@@ -76,6 +76,7 @@ const val TAB_ALARM_INDEX = 1
 const val TAB_TIMER_INDEX = 2
 
 const val TIMER_ID = "timer_id"
+const val TIMER_FINISH_INTENT_BASE = 500000
 const val INVALID_TIMER_ID = -1
 
 // alarm and timer sorting

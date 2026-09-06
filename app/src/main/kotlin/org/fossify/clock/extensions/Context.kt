@@ -38,6 +38,7 @@ import org.fossify.clock.helpers.OPEN_ALARMS_TAB_INTENT_ID
 import org.fossify.clock.helpers.OPEN_TAB
 import org.fossify.clock.helpers.TAB_ALARM
 import org.fossify.clock.helpers.TAB_TIMER
+import org.fossify.clock.helpers.TIMER_FINISH_INTENT_BASE
 import org.fossify.clock.helpers.TIMER_ID
 import org.fossify.clock.helpers.TODAY_BIT
 import org.fossify.clock.helpers.TOMORROW_BIT
@@ -56,6 +57,7 @@ import org.fossify.clock.receivers.AlarmReceiver
 import org.fossify.clock.receivers.HideTimerReceiver
 import org.fossify.clock.receivers.SkipUpcomingAlarmReceiver
 import org.fossify.clock.receivers.StopAlarmReceiver
+import org.fossify.clock.receivers.TimerAlarmReceiver
 import org.fossify.clock.receivers.UpcomingAlarmReceiver
 import org.fossify.clock.services.SnoozeService
 import org.fossify.commons.extensions.formatMinutesToTimeString
@@ -247,6 +249,34 @@ fun Context.getOpenTimerTabIntent(timerId: Int): PendingIntent {
     return PendingIntent.getActivity(
         this,
         timerId,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+}
+
+fun Context.scheduleTimerFinish(timerId: Int, delayMs: Long) {
+    try {
+        AlarmManagerCompat.setExactAndAllowWhileIdle(
+            alarmManager,
+            0,
+            System.currentTimeMillis() + delayMs,
+            getTimerFinishPendingIntent(timerId)
+        )
+    } catch (e: Exception) {
+    }
+}
+
+fun Context.cancelTimerFinish(timerId: Int) {
+    alarmManager.cancel(getTimerFinishPendingIntent(timerId))
+}
+
+private fun Context.getTimerFinishPendingIntent(timerId: Int): PendingIntent {
+    val intent = Intent(this, TimerAlarmReceiver::class.java).apply {
+        putExtra(TIMER_ID, timerId)
+    }
+    return PendingIntent.getBroadcast(
+        this,
+        TIMER_FINISH_INTENT_BASE + timerId,
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
