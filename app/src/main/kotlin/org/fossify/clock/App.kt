@@ -129,6 +129,7 @@ class App : FossifyApp(), LifecycleObserver {
             if (timer.vibrate) {
                 startAlarmClassVibration()
             }
+            org.fossify.clock.activities.TimerAlarmActivity.launch(this, event.timerId)
             Handler(Looper.getMainLooper()).postDelayed({
                 hideNotification(event.timerId)
                 TorchHelper.setTorch(this, false)

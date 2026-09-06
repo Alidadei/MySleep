@@ -31,6 +31,8 @@ class TimerAlarmReceiver : BroadcastReceiver() {
             RingDiagnostics.log(context, "计时器兜底闹钟触发 running=$running")
             if (running) {
                 EventBus.getDefault().post(TimerEvent.Finish(timerId, 0))
+                org.fossify.clock.activities.TimerAlarmActivity.launch(context, timerId)
+                RingDiagnostics.log(context, "已尝试拉起计时器响铃页")
             }
         }
     }

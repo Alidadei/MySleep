@@ -127,6 +127,14 @@
 
 
         <activity
+            android:name=".activities.TimerAlarmActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:showOnLockScreen="true"
+            android:taskAffinity=".TimerAlarmActivity" />
+
+        <activity
             android:name=".activities.SleepReportActivity"
             android:configChanges="orientation"
             android:exported="false"

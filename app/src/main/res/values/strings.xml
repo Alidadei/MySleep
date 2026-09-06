@@ -9,6 +9,8 @@
     <string name="timer_stopped">Timer has been stopped</string>
     <string name="max_reminder_duration">Max reminder duration</string>
     <string name="time_expired">Time expired</string>
+    <string name="timer_alarm_hint">Tap the button below to stop the ring and the flashlight</string>
+    <string name="timer_alarm_close">Stop</string>
     <string name="clock_and_date">Clock and date</string>
     <string name="use_text_shadow">Use text shadow</string>
     <string name="swipe_right_to_dismiss">Swipe right to dismiss · Swipe left to snooze</string>
