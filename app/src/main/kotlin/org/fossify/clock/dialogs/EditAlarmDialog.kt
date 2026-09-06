@@ -1,6 +1,7 @@
 package org.fossify.clock.dialogs
 
 import android.app.TimePickerDialog
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.media.RingtoneManager
@@ -20,7 +21,10 @@ import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
 import org.fossify.clock.extensions.rotateWeekdays
 import org.fossify.clock.helpers.PICK_AUDIO_FILE_INTENT_ID
 import org.fossify.clock.helpers.TorchHelper
+import org.fossify.clock.helpers.TODAY_BIT
 import org.fossify.clock.helpers.getCurrentDayMinutes
+import org.fossify.clock.helpers.getTodayBit
+import org.fossify.clock.helpers.getTomorrowBit
 import org.fossify.clock.helpers.updateNonRecurringAlarmDay
 import org.fossify.clock.models.Alarm
 import org.fossify.commons.dialogs.ConfirmationDialog
@@ -119,6 +123,7 @@ class EditAlarmDialog(
                 alarm.vibrate = editAlarmVibrate.isChecked
             }
 
+            setupTypeToggle()
             setupLightWakeOptions()
 
             editAlarmLabelImage.applyColorFilter(textColor)
@@ -209,6 +214,51 @@ class EditAlarmDialog(
                     }
                 }
             }
+    }
+
+    /**
+     * Explicit "once / repeat" type switch. A once alarm is the existing dayless
+     * behaviour: it rings today or tomorrow, then gets disabled.
+     */
+    private fun setupTypeToggle() {
+        updateTypeToggleUI()
+
+        binding.editAlarmTypeOnce.setOnClickListener {
+            if (alarm.isRecurring()) {
+                alarm.days = 0
+                updateTypeToggleUI()
+                checkDaylessAlarm()
+            }
+        }
+
+        binding.editAlarmTypeRepeat.setOnClickListener {
+            if (!alarm.isRecurring()) {
+                alarm.days = when (alarm.days) {
+                    TODAY_BIT -> getTodayBit()
+                    else -> getTomorrowBit()
+                }
+                updateTypeToggleUI()
+            }
+        }
+    }
+
+    private fun updateTypeToggleUI() {
+        val recurring = alarm.isRecurring()
+        val context = binding.root.context
+
+        binding.editAlarmTypeOnce.apply {
+            background = context.getDrawable(
+                if (!recurring) R.drawable.bg_chip_selected else R.drawable.bg_chip_unselected
+            )
+            setTextColor(if (!recurring) Color.WHITE else textColor)
+        }
+        binding.editAlarmTypeRepeat.apply {
+            background = context.getDrawable(
+                if (recurring) R.drawable.bg_chip_selected else R.drawable.bg_chip_unselected
+            )
+            setTextColor(if (recurring) Color.WHITE else textColor)
+        }
+        binding.editAlarmDaysHolder.beVisibleIf(recurring)
     }
 
     private fun setupLightWakeOptions() {

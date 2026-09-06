@@ -62,6 +62,12 @@
     <string name="sunrise_service_note">日出渐亮进行中</string>
     <string name="sunrise_hint">日出渐亮中 · 轻触屏幕隐藏画面，灯光会继续</string>
     <string name="tab_relax">助眠</string>
+    <string name="type_once">单次</string>
+    <string name="type_repeat">重复</string>
+    <string name="back_label">返回</string>
+    <string name="hub_favorites_subtitle">小说 · 音频 · 网页链接</string>
+    <string name="hub_picks_subtitle">白噪音 · 有声书 · 雨声</string>
+    <string name="report_subtitle_empty">还没有起床记录</string>
     <string name="battery_prompt_title">让闹钟准时响铃</string>
     <string name="autostart_prompt_title">重启后也能响铃</string>
     <string name="autostart_prompt_message">手机厂商默认禁止应用开机自启。请在下一个界面允许“睡眠站台”自启动，重启手机后闹钟才能照常响。</string>

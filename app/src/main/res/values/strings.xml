@@ -66,6 +66,12 @@
     <string name="sunrise_service_note">Sunrise light fade-in running</string>
     <string name="sunrise_hint">Sunrise in progress · tap to hide the screen, the light stays on</string>
     <string name="tab_relax">Sleep</string>
+    <string name="type_once">Once</string>
+    <string name="type_repeat">Repeat</string>
+    <string name="back_label">Back</string>
+    <string name="hub_favorites_subtitle">Novels · audio · web links</string>
+    <string name="hub_picks_subtitle">White noise · audiobooks · rain</string>
+    <string name="report_subtitle_empty">No wake-up records yet</string>
     <string name="battery_prompt_title">Reliable alarms</string>
     <string name="autostart_prompt_title">Alarms after reboot</string>
     <string name="autostart_prompt_message">Your phone maker blocks apps from starting themselves by default. Allow autostart for Sleep Station on the next screen so alarms keep working after a reboot.</string>

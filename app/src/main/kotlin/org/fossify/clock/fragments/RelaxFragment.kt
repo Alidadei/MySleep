@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
@@ -22,7 +23,11 @@ import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.requiredActivity
 import org.fossify.clock.helpers.RelaxItem
 import org.fossify.clock.helpers.RelaxStore
+import org.fossify.commons.extensions.applyColorFilter
+import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beGoneIf
+import org.fossify.commons.extensions.beVisible
+import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
@@ -30,13 +35,16 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import kotlin.math.roundToInt
 
 /**
- * The bedtime tab: a sleep report summary on top (with a link to the full
- * report) and the relax favorites below (curated picks, web links and local
- * files - novels, audio).
+ * The bedtime tab: a launcher hub with three entry cards (favorites, curated
+ * picks, sleep report). Favorites and picks expand in place; the report opens
+ * its own screen.
  */
 class RelaxFragment : Fragment() {
 
+    private enum class Section { FAVORITES, PICKS }
+
     private lateinit var binding: FragmentRelaxBinding
+    private var currentSection = Section.FAVORITES
 
     private val filePicker =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -45,96 +53,121 @@ class RelaxFragment : Fragment() {
             }
         }
 
+    private val backCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            showHub()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
         binding = FragmentRelaxBinding.inflate(inflater, container, false)
-        binding.relaxAddFavorite.setOnClickListener {
-            showAddChoiceDialog()
-        }
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
+
+        val accent = requireContext().getColor(R.color.color_accent)
+        binding.cardFavoritesIcon.applyColorFilter(accent)
+        binding.cardPicksIcon.applyColorFilter(accent)
+        binding.cardReportIcon.applyColorFilter(accent)
+
+        binding.cardFavorites.setOnClickListener { showSection(Section.FAVORITES) }
+        binding.cardPicks.setOnClickListener { showSection(Section.PICKS) }
+        binding.cardReport.setOnClickListener {
+            startActivity(Intent(requireContext(), SleepReportActivity::class.java))
+        }
+
+        binding.relaxBack.setOnClickListener { showHub() }
+        binding.relaxAddFavorite.setOnClickListener { showAddChoiceDialog() }
+
+        showHub()
+        refreshReportSubtitle()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshSleepSummary()
-        showItems()
-    }
-
-    private fun refreshSleepSummary() {
-        ensureBackgroundThread {
-            val records = requiredActivity.dbHelper.getRecentSleepRecords(30)
-            activity?.runOnUiThread {
-                showSleepSummary(records)
-            }
+        refreshReportSubtitle()
+        if (binding.relaxSection.visibility == View.VISIBLE) {
+            populateSection(currentSection)
         }
     }
 
-    private fun showSleepSummary(records: List<org.fossify.clock.models.SleepRecord>) {
-        if (!isAdded) {
-            return
-        }
+    private fun showHub() {
+        backCallback.isEnabled = false
+        binding.relaxHub.beVisible()
+        binding.relaxSection.beGone()
+    }
 
-        binding.sleepReportCard.beGoneIf(records.isEmpty())
-        if (records.isEmpty()) {
-            return
-        }
+    private fun showSection(section: Section) {
+        currentSection = section
+        backCallback.isEnabled = true
+        binding.relaxHub.beGone()
+        binding.relaxSection.beVisible()
 
-        val oversleepMinutes = records.map {
-            ((it.stoppedAtMillis - it.ringAtMillis) / 60000L).coerceAtLeast(0L)
-        }
-        val avgOversleep = (oversleepMinutes.sum().toFloat() / oversleepMinutes.size).roundToInt()
-        val onTimeCount = oversleepMinutes.count { it <= 5 }
-        val onTimePercent = (onTimeCount * 100f / records.size).roundToInt()
-
-        binding.sleepReportSummary.text = getString(
-            R.string.sleep_report_summary_fmt,
-            records.size,
-            onTimePercent,
-            avgOversleep
+        binding.relaxSectionTitle.setText(
+            if (section == Section.FAVORITES) R.string.relax_custom_label else R.string.relax_picks_label
         )
-
-        binding.sleepReportDetails.setOnClickListener {
-            startActivity(Intent(requireContext(), SleepReportActivity::class.java))
-        }
+        populateSection(section)
+        requireActivity().updateTextColors(binding.relaxSection)
     }
 
-    private fun showItems() {
-        if (!isAdded) {
-            return
-        }
-
+    private fun populateSection(section: Section) {
         binding.relaxHolder.removeAllViews()
 
-        addSectionLabel(getString(R.string.relax_picks_label))
-        RelaxStore.getBuiltIns().forEach { item ->
-            addItemRow(item, deletable = false)
+        if (section == Section.PICKS) {
+            RelaxStore.getBuiltIns().forEach { item ->
+                addItemRow(item, deletable = false)
+            }
+            binding.relaxEmptyCustom.beGone()
+            binding.relaxAddFavorite.beGone()
+            return
         }
 
         val customItems = RelaxStore.getCustomItems(requireContext())
-        addSectionLabel(getString(R.string.relax_custom_label))
-        binding.relaxEmptyCustom.beGoneIf(customItems.isNotEmpty())
         customItems.forEach { item ->
             addItemRow(item, deletable = true)
         }
-
-        updateTextColorsSafely()
+        binding.relaxEmptyCustom.beVisibleIf(customItems.isEmpty())
+        binding.relaxAddFavorite.beVisible()
     }
 
-    private fun updateTextColorsSafely() {
-        if (isAdded) {
-            requireActivity().updateTextColors(binding.relaxHolder)
+    private fun refreshReportSubtitle() {
+        ensureBackgroundThread {
+            val records = try {
+                requiredActivity.dbHelper.getRecentSleepRecords(30)
+            } catch (e: Exception) {
+                return@ensureBackgroundThread
+            }
+            activity?.runOnUiThread {
+                if (!isAdded) {
+                    return@runOnUiThread
+                }
+
+                binding.reportSubtitle.text = if (records.isEmpty()) {
+                    getString(R.string.report_subtitle_empty)
+                } else {
+                    val oversleepMinutes = records.map {
+                        ((it.stoppedAtMillis - it.ringAtMillis) / 60000L).coerceAtLeast(0L)
+                    }
+                    val avgOversleep =
+                        (oversleepMinutes.sum().toFloat() / oversleepMinutes.size).roundToInt()
+                    val onTimePercent =
+                        (oversleepMinutes.count { it <= 5 } * 100f / records.size).roundToInt()
+                    getString(
+                        R.string.sleep_report_summary_fmt,
+                        records.size,
+                        onTimePercent,
+                        avgOversleep
+                    )
+                }
+            }
         }
-    }
-
-    private fun addSectionLabel(text: String) {
-        val label = LayoutInflater.from(requireContext()).inflate(
-            R.layout.item_relax_section, binding.relaxHolder, false
-        ) as org.fossify.commons.views.MyTextView
-        label.text = text
-        binding.relaxHolder.addView(label)
     }
 
     private fun addItemRow(item: RelaxItem, deletable: Boolean) {
@@ -161,7 +194,7 @@ class RelaxFragment : Fragment() {
                     .setMessage(R.string.relax_delete_confirm)
                     .setPositiveButton(R.string.relax_remove) { _, _ ->
                         RelaxStore.removeCustomItem(requireContext(), item.id)
-                        showItems()
+                        populateSection(Section.FAVORITES)
                     }
                     .setNegativeButton(org.fossify.commons.R.string.cancel, null)
                     .show()
@@ -202,7 +235,7 @@ class RelaxFragment : Fragment() {
 
         val title = queryDisplayName(uri) ?: getString(R.string.relax_local_label)
         RelaxStore.addCustomItem(requireContext(), title, uri.toString(), isLocal = true)
-        showItems()
+        populateSection(Section.FAVORITES)
     }
 
     private fun queryDisplayName(uri: Uri): String? {
@@ -282,7 +315,7 @@ class RelaxFragment : Fragment() {
                     RelaxStore.normalizeUrl(urlInput.text.toString())
                 )
                 dialog.dismiss()
-                showItems()
+                populateSection(Section.FAVORITES)
             }
         }
 
