@@ -46,14 +46,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/relax_custom_label"
-                        android:textColor="@android:color/white"
+                        android:textColor="#DE333333"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#B8FFFFFF"
+                        android:textColor="#99333333"
                         android:text="@string/hub_favorites_subtitle"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
@@ -87,14 +87,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/relax_picks_label"
-                        android:textColor="@android:color/white"
+                        android:textColor="#DE333333"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#B8FFFFFF"
+                        android:textColor="#99333333"
                         android:text="@string/hub_picks_subtitle"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
@@ -128,7 +128,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/sleep_report"
-                        android:textColor="@android:color/white"
+                        android:textColor="#DE333333"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
@@ -136,7 +136,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#B8FFFFFF"
+                        android:textColor="#99333333"
                         android:text="@string/report_subtitle_empty"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
@@ -183,7 +183,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:textColor="@android:color/white"
+                    android:textColor="#DE333333"
                     android:textSize="@dimen/bigger_text_size" />
             </LinearLayout>
 
