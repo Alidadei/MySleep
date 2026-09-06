@@ -150,6 +150,20 @@ class MainActivity : SimpleActivity() {
             }
         }
 
+        // overlay is the system-whitelisted bypass for background activity
+        // launches: with it granted, the ring page pops over the lock screen
+        // even when the full-screen intent toggle is suppressed by the ROM
+        if (!Settings.canDrawOverlays(this)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= 34) {
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
             if (!nm.canUseFullScreenIntent()) {

@@ -67,7 +67,8 @@ class AlarmReceiver : BroadcastReceiver() {
                             putExtra(org.fossify.clock.helpers.ALARM_ID, alarm.id)
                         }
                     )
-                    RingDiagnostics.log(context, "已尝试直接拉起响铃页")
+                    val overlayOn = android.provider.Settings.canDrawOverlays(context)
+                    RingDiagnostics.log(context, "已尝试直接拉起响铃页 (悬浮窗=" + overlayOn + ")")
                 } catch (e: Exception) {
                     RingDiagnostics.log(context, "直接拉起响铃页异常: ${e.message}")
                 }

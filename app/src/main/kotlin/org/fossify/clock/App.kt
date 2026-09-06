@@ -1,6 +1,10 @@
 package org.fossify.clock
 
+import android.content.Context
+import android.os.Build
+import android.os.CombinedVibration
 import android.os.CountDownTimer
+import android.os.VibrationEffect
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.Lifecycle
@@ -75,6 +79,7 @@ class App : FossifyApp(), LifecycleObserver {
         countDownTimers[event.timerId]?.cancel()
         cancelTimerFinish(event.timerId)
         TorchHelper.setTorch(this, false)
+        stopAlarmClassVibration()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -121,9 +126,13 @@ class App : FossifyApp(), LifecycleObserver {
                 TorchHelper.setTorch(this, true)
                 ScreenWaker.wake(this, "org.fossify.clock:timer_light")
             }
+            if (timer.vibrate) {
+                startAlarmClassVibration()
+            }
             Handler(Looper.getMainLooper()).postDelayed({
                 hideNotification(event.timerId)
                 TorchHelper.setTorch(this, false)
+                stopAlarmClassVibration()
             }, config.timerMaxReminderSecs * 1000L)
         }
     }
@@ -137,6 +146,42 @@ class App : FossifyApp(), LifecycleObserver {
                 TimerState.Paused(event.duration, (timer.state as TimerState.Running).tick)
             )
             countDownTimers[event.timerId]?.cancel()
+        }
+    }
+
+    /** Alarm-class vibration (USAGE_ALARM) - the tier HyperOS does not suppress. */
+    private fun startAlarmClassVibration() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                manager.vibrate(
+                    android.os.CombinedVibration.createParallel(
+                        VibrationEffect.createWaveform(longArrayOf(0, 500, 500), 0)
+                    ),
+                    android.os.VibrationAttributes.Builder()
+                        .setUsage(android.os.VibrationAttributes.USAGE_ALARM)
+                        .build()
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(VIBRATOR_SERVICE) as android.os.Vibrator
+                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 500), 0))
+            }
+        } catch (e: Exception) {
+        }
+    }
+
+    private fun stopAlarmClassVibration() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                manager.defaultVibrator.cancel()
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(VIBRATOR_SERVICE) as android.os.Vibrator
+                vibrator.cancel()
+            }
+        } catch (e: Exception) {
         }
     }
 

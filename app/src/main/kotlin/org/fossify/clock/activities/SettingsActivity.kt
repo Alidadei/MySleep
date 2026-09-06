@@ -531,6 +531,24 @@ class SettingsActivity : SimpleActivity() {
             .append(if (nm.areNotificationsEnabled()) "ON" else "OFF")
             .append("\n")
         val ringerMode = (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).ringerMode
+        // overlay is the system-whitelisted bypass for background activity
+        // launches: with it granted, the ring page pops over the lock screen
+        // even when the full-screen intent toggle is suppressed by the ROM
+        if (!Settings.canDrawOverlays(this)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        sb.append(getString(R.string.diag_overlay_line)).append(": ")
+            .append(if (android.provider.Settings.canDrawOverlays(this)) "ON" else "OFF (needed to pop the ring page)")
+            .append("\n")
+
         if (Build.VERSION.SDK_INT >= 34) {
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
             sb.append(getString(R.string.diag_fsi_line)).append(": ")
