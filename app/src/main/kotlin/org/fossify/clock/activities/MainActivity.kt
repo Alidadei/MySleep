@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.drawable.toDrawable
 import me.grantland.widget.AutofitHelper
 import org.fossify.clock.BuildConfig
@@ -17,6 +18,7 @@ import org.fossify.clock.R
 import org.fossify.clock.adapters.ViewPagerAdapter
 import org.fossify.clock.databinding.ActivityMainBinding
 import org.fossify.clock.extensions.alarmController
+import org.fossify.clock.extensions.alarmManager
 import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.getEnabledAlarms
 import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
@@ -91,65 +93,132 @@ class MainActivity : SimpleActivity() {
             }
         }
 
-        promptAlarmReliabilitySetup()
+        if (!config.wasPermissionWizardCompleted) {
+            config.wasPermissionWizardCompleted = true
+            startPermissionWizard()
+        } else {
+            promptBatteryWhitelistIfMissing()
+        }
     }
 
     /**
-     * 国产 ROM 的后台清理是闹钟失灵的头号原因。省电白名单每次冷启动自检，
-     * 未通过就引导；自启动开关无法用代码探测，只引导一次（页面直达）。
+     * 首次启动自动运行完整权限向导；之后的冷启动只轻检电池白名单。
+     * 完整向导随时可在 设置 → 闹钟可靠性 里重跑。
      */
-    private fun promptAlarmReliabilitySetup() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val batteryIgnored = powerManager.isIgnoringBatteryOptimizations(packageName)
-
-        if (!batteryIgnored) {
-            getAlertDialogBuilder()
-                .setTitle(R.string.battery_prompt_title)
-                .setMessage(R.string.battery_prompt_message)
-                .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
-                    try {
-                        startActivity(
-                            Intent(
-                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                                Uri.parse("package:$packageName")
-                            )
-                        )
-                    } catch (e: Exception) {
-                        try {
-                            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                        } catch (ignored: Exception) {
-                        }
-                    }
-                }
-                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
-                .show()
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            runNextPermissionStep()
         }
 
-        promptAutoStartPermission()
+    private val settingsIntentLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            runNextPermissionStep()
+        }
+
+    private var permissionSteps = mutableListOf<() -> Unit>()
+
+    private fun startPermissionWizard() {
+        getAlertDialogBuilder()
+            .setTitle(R.string.permissions_setup)
+            .setMessage(R.string.permissions_setup_confirm)
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                buildPermissionSteps()
+                runNextPermissionStep()
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
     }
 
-    private fun promptAutoStartPermission() {
-        if (config.autostartPromptShown) {
+    private fun buildPermissionSteps() {
+        permissionSteps = mutableListOf()
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+
+        if (org.fossify.commons.helpers.isTiramisuPlus() &&
+            checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionSteps.add {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= 31 && alarmManager.canScheduleExactAlarms().not()) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))
+                )
+            }
+        }
+
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        permissionSteps.add {
+            AutoStartHelper.getIntent(this)?.let { settingsIntentLauncher.launch(it) }
+                ?: runNextPermissionStep()
+        }
+
+        if (!config.backgroundPopupPromptShown) {
+            config.backgroundPopupPromptShown = true
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+    }
+
+    private fun runNextPermissionStep() {
+        if (permissionSteps.isEmpty()) {
+            toast(R.string.permissions_setup_done)
+            return
+        }
+        permissionSteps.removeAt(0).invoke()
+    }
+
+    /** 后续冷启动的轻检：电池白名单未通过就一直提示。 */
+    private fun promptBatteryWhitelistIfMissing() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) {
             return
         }
 
-        val autoStartIntent = getAutoStartIntent() ?: return
-        config.autostartPromptShown = true
-
         getAlertDialogBuilder()
-            .setTitle(R.string.autostart_prompt_title)
-            .setMessage(R.string.autostart_prompt_message)
+            .setTitle(R.string.battery_prompt_title)
+            .setMessage(R.string.battery_prompt_message)
             .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
                 try {
-                    startActivity(autoStartIntent)
+                    startActivity(
+                        Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            Uri.parse("package:$packageName")
+                        )
+                    )
                 } catch (e: Exception) {
                     try {
-                        startActivity(
-                            Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.parse("package:$packageName")
-                            )
-                        )
+                        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                     } catch (ignored: Exception) {
                     }
                 }
@@ -157,10 +226,6 @@ class MainActivity : SimpleActivity() {
             .setNegativeButton(org.fossify.commons.R.string.cancel, null)
             .show()
     }
-
-    /** 自启动设置页，按厂商直达（激进杀后台的 ROM 全在清单里）。 */
-    private fun getAutoStartIntent(): Intent? = AutoStartHelper.getIntent(this)
-
 
     override fun onResume() {
         super.onResume()

@@ -86,10 +86,10 @@ class Config(context: Context) : BaseConfig(context) {
             putInt(ALARM_MAX_REMINDER_SECS, alarmMaxReminderSecs)
         }
 
-    var autostartPromptShown: Boolean
-        get() = prefs.getBoolean(AUTOSTART_PROMPT_SHOWN, false)
-        set(autostartPromptShown) = prefs.edit {
-            putBoolean(AUTOSTART_PROMPT_SHOWN, autostartPromptShown)
+    var wasPermissionWizardCompleted: Boolean
+        get() = prefs.getBoolean(PERMISSION_WIZARD_COMPLETED, false)
+        set(wasPermissionWizardCompleted) = prefs.edit {
+            putBoolean(PERMISSION_WIZARD_COMPLETED, wasPermissionWizardCompleted)
         }
 
     var backgroundPopupPromptShown: Boolean
