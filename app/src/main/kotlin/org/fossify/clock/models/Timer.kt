@@ -18,6 +18,7 @@ data class Timer(
     var createdAt: Long,
     var channelId: String? = null,
     var oneShot: Boolean = false,
+    var lightAlarm: Boolean = false,
 )
 
 @Keep
@@ -33,6 +34,7 @@ data class ObfuscatedTimer(
     var h: Long,
     var i: String? = null,
     var j: Boolean = false,
+    var k: Boolean = false,
 ) {
-    fun toTimer() = Timer(a, b, TimerState.Idle, d, e, f, g, h, i, j)
+    fun toTimer() = Timer(a, b, TimerState.Idle, d, e, f, g, h, i, j, k)
 }

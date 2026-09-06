@@ -37,6 +37,15 @@ class EditTimerDialog(val activity: SimpleActivity, val timer: Timer, val callba
                 timer.channelId = null
             }
 
+            editTimerLightIcon.setColorFilter(textColor)
+            editTimerLight.isChecked = timer.lightAlarm
+            editTimerLight.setTextColor(textColor)
+            editTimerLightHolder.setOnClickListener {
+                editTimerLight.toggle()
+                timer.lightAlarm = editTimerLight.isChecked
+                timer.channelId = null
+            }
+
             editTimerSound.colorCompoundDrawable(textColor)
             editTimerSound.text = timer.soundTitle
             editTimerSound.setOnClickListener {
@@ -86,6 +95,7 @@ class EditTimerDialog(val activity: SimpleActivity, val timer: Timer, val callba
                 timer.soundTitle = lastConfig.soundTitle
                 timer.soundUri = lastConfig.soundUri
                 timer.vibrate = lastConfig.vibrate
+                timer.lightAlarm = lastConfig.lightAlarm
             }
         }
     }

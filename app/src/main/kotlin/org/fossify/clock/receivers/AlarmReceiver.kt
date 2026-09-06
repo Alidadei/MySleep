@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.CombinedVibration
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.os.PowerManager
 import android.os.VibratorManager
 import kotlinx.coroutines.delay
 import org.fossify.clock.extensions.alarmController
@@ -17,6 +16,7 @@ import org.fossify.clock.extensions.hideNotification
 import org.fossify.clock.helpers.ALARM_ID
 import org.fossify.clock.helpers.AlarmNotificationHelper
 import org.fossify.clock.helpers.RingDiagnostics
+import org.fossify.clock.helpers.ScreenWaker
 import org.fossify.clock.helpers.UPCOMING_ALARM_NOTIFICATION_ID
 import org.fossify.commons.helpers.SILENT
 
@@ -59,34 +59,13 @@ class AlarmReceiver : BroadcastReceiver() {
                 // system-driven ring straight from the receiver: sound loops and
                 // the channel vibrates even if the foreground service is blocked
                 AlarmNotificationHelper(context).postAlertNotification(alarm)
-                wakeUpScreen(context)
+                ScreenWaker.wake(context, WAKELOCK_TAG)
                 if (alarm.vibrate) {
                     emergencyVibrate(context)
                 }
             }
 
             context.alarmController.onAlarmTriggered(id)
-        }
-    }
-
-    /**
-     * Light the screen even on the lock screen: the alert notification is
-     * public and swipe-dismissible there, and the full-screen ring page can
-     * take over. ACQUIRE_CAUSES_WAKEUP is the reliable way to force this when
-     * OEM ROMs block activity launching from the background.
-     */
-    private fun wakeUpScreen(context: Context) {
-        try {
-            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            @Suppress("DEPRECATION")
-            val wakeLock = powerManager.newWakeLock(
-                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                WAKELOCK_TAG
-            )
-            wakeLock.acquire(30_000L)
-            RingDiagnostics.log(context, "锁屏亮屏已触发")
-        } catch (e: Exception) {
-            RingDiagnostics.log(context, "锁屏亮屏异常: ${e.message}")
         }
     }
 

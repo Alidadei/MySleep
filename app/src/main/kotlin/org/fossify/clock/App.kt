@@ -14,6 +14,8 @@ import org.fossify.clock.extensions.hideNotification
 import org.fossify.clock.extensions.timerHelper
 import org.fossify.clock.models.TimerEvent
 import org.fossify.clock.models.TimerState
+import org.fossify.clock.helpers.ScreenWaker
+import org.fossify.clock.helpers.TorchHelper
 import org.fossify.clock.services.TimerStopService
 import org.fossify.clock.services.startTimerService
 import org.fossify.commons.FossifyApp
@@ -69,6 +71,7 @@ class App : FossifyApp(), LifecycleObserver {
     fun onMessageEvent(event: TimerEvent.Reset) {
         updateTimerState(event.timerId, TimerState.Idle)
         countDownTimers[event.timerId]?.cancel()
+        TorchHelper.setTorch(this, false)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -107,8 +110,15 @@ class App : FossifyApp(), LifecycleObserver {
             }
 
             updateTimerState(event.timerId, TimerState.Finished)
+
+            // light-alarm timers wake the user with the flashlight
+            if (timer.lightAlarm && TorchHelper.hasFlash(this)) {
+                TorchHelper.setTorch(this, true)
+                ScreenWaker.wake(this, "org.fossify.clock:timer_light")
+            }
             Handler(Looper.getMainLooper()).postDelayed({
                 hideNotification(event.timerId)
+                TorchHelper.setTorch(this, false)
             }, config.timerMaxReminderSecs * 1000L)
         }
     }

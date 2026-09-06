@@ -70,8 +70,41 @@
             android:gravity="center_vertical"
             android:padding="@dimen/activity_margin"
             android:textSize="@dimen/bigger_text_size"
-            app:layout_constraintTop_toBottomOf="@+id/edit_timer_vibrate_holder"
+            app:layout_constraintTop_toBottomOf="@+id/edit_timer_light_holder"
             tools:text="Default Alarm" />
+
+        <RelativeLayout
+            android:id="@+id/edit_timer_light_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="@dimen/activity_margin"
+            android:paddingTop="@dimen/medium_margin"
+            android:paddingEnd="@dimen/activity_margin"
+            android:paddingBottom="@dimen/medium_margin"
+            app:layout_constraintTop_toBottomOf="@+id/edit_timer_vibrate_holder">
+
+            <ImageView
+                android:id="@+id/edit_timer_light_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/edit_timer_light"
+                android:layout_alignBottom="@+id/edit_timer_light"
+                android:src="@drawable/ic_torch_vector" />
+
+            <org.fossify.commons.views.MyAppCompatCheckbox
+                android:id="@+id/edit_timer_light"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/small_margin"
+                android:layout_toEndOf="@+id/edit_timer_light_icon"
+                android:background="@null"
+                android:clickable="false"
+                android:layoutDirection="rtl"
+                android:padding="@dimen/medium_margin"
+                android:text="@string/torch_on_alarm" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/edit_timer_label_holder"
