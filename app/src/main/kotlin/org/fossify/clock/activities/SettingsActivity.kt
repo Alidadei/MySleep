@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.VibrationEffect
 import android.provider.Settings
 import android.content.Intent
 import android.net.Uri
@@ -18,6 +19,7 @@ import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.timerDb
 import org.fossify.clock.extensions.updateWidgets
 import org.fossify.clock.helpers.AutoStartHelper
+import org.fossify.clock.helpers.RingDiagnostics
 import org.fossify.clock.helpers.DEFAULT_MAX_ALARM_REMINDER_SECS
 import org.fossify.clock.extensions.alarmManager
 import org.fossify.clock.helpers.DEFAULT_MAX_TIMER_REMINDER_SECS
@@ -99,6 +101,9 @@ class SettingsActivity : SimpleActivity() {
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
         binding.settingsPermissionsSetupHolder.setOnClickListener {
             startPermissionWizard()
+        }
+        binding.settingsVibrationTestHolder.setOnClickListener {
+            startVibrationSelfTest()
         }
 
         setupCustomizeColors()
@@ -396,6 +401,51 @@ class SettingsActivity : SimpleActivity() {
             return
         }
         permissionSteps.removeAt(0).invoke()
+    }
+
+
+    /** Fires a strong 1.5s vibration; if the user feels nothing, shows the
+     *  ring diagnostics so we can see which layer swallowed it. */
+    private fun startVibrationSelfTest() {
+        var invoked = false
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= 31) {
+                (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager)
+                    .defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+            }
+            vibrator.vibrate(VibrationEffect.createOneShot(1500, VibrationEffect.DEFAULT_AMPLITUDE))
+            invoked = true
+            RingDiagnostics.log(this, "自检振动已调用")
+        } catch (e: Exception) {
+            RingDiagnostics.log(this, "自检振动异常: ${e.message}")
+        }
+
+        getAlertDialogBuilder()
+            .setTitle(R.string.vibration_test)
+            .setMessage(R.string.vibration_test_feel)
+            .setPositiveButton(R.string.vibration_test_yes) { _, _ ->
+                RingDiagnostics.log(this, "自检:用户有感觉")
+                toast(R.string.vibration_test_ok)
+            }
+            .setNegativeButton(R.string.vibration_test_no) { _, _ ->
+                RingDiagnostics.log(this, "自检:用户无感觉")
+                val log = RingDiagnostics.getLog(this)
+                    .joinToString("\n")
+                    .ifEmpty { getString(R.string.vibration_test_log_empty) }
+                getAlertDialogBuilder()
+                    .setTitle(R.string.diagnostics_title)
+                    .setMessage(log)
+                    .setPositiveButton(org.fossify.commons.R.string.ok, null)
+                    .show()
+            }
+            .show()
+
+        if (!invoked) {
+            toast(R.string.vibration_test_failed)
+        }
     }
 
     private fun exportData(outputUri: Uri) {

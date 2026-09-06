@@ -135,6 +135,7 @@ class AlarmNotificationHelper(private val context: Context) {
             .build()
 
         notification.flags = notification.flags or Notification.FLAG_INSISTENT
+        RingDiagnostics.log(context, "系统警报通知已发布 vibrate=${alarm.vibrate} sound=${alarm.soundUri != SILENT}")
         context.notificationManager.notify(ALARM_ALERT_NOTIFICATION_ID, notification)
     }
 

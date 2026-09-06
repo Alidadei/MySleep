@@ -66,6 +66,14 @@
     <string name="permissions_setup">Set up all permissions at once</string>
     <string name="permissions_setup_confirm">The following screens will open one by one: notifications, exact alarms, battery optimization, display over other apps and autostart. Each step continues automatically after you finish it.</string>
     <string name="permissions_setup_done">Permission setup finished</string>
+    <string name="vibration_test">Vibration self-test</string>
+    <string name="vibration_test_feel">A 1.5-second test vibration was just fired. Did you feel it?</string>
+    <string name="vibration_test_yes">Yes</string>
+    <string name="vibration_test_no">No</string>
+    <string name="vibration_test_ok">Vibration path works</string>
+    <string name="vibration_test_failed">Vibration API call failed</string>
+    <string name="vibration_test_log_empty">No ring diagnostics yet</string>
+    <string name="diagnostics_title">Ring diagnostics</string>
     <string name="community_label">Community picks</string>
     <string name="recommend_add">Recommend content</string>
     <string name="rate_prompt">Rate how well this helped you sleep (5 = best)</string>

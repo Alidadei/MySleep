@@ -14,6 +14,7 @@ import org.fossify.clock.helpers.ALARM_ALERT_NOTIFICATION_ID
 import org.fossify.clock.helpers.ALARM_ID
 import org.fossify.clock.helpers.ALARM_NOTIFICATION_ID
 import org.fossify.clock.helpers.AlarmNotificationHelper
+import org.fossify.clock.helpers.RingDiagnostics
 import org.fossify.clock.helpers.TorchHelper
 import org.fossify.clock.models.Alarm
 import org.fossify.commons.helpers.SILENT
@@ -113,11 +114,7 @@ class AlarmService : Service() {
             startTorchWithRetry()
         }
 
-        // system-driven ring: the alert notification loops the alarm sound and
-        // vibrates through its channel, immune to OEM background restrictions
-        if (!alarm.lightOnly || alarm.vibrate) {
-            notificationHelper.postAlertNotification(alarm)
-        }
+        RingDiagnostics.log(this, "响铃服务已启动 light=${alarm.usesLightWake()} vibrate=${alarm.vibrate}")
 
         if (alarm.lightOnly) {
             // light-only alarm: wake the user with light instead of sound
@@ -157,6 +154,7 @@ class AlarmService : Service() {
             }
 
             this.vibrator = vibrator
+            RingDiagnostics.log(this, "进程内振动已调用")
             vibrator.vibrate(
                 VibrationEffect.createWaveform(
                     longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0

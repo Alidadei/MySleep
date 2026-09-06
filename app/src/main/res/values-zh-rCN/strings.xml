@@ -60,6 +60,14 @@
     <string name="permissions_setup">一键开启所需权限</string>
     <string name="permissions_setup_confirm">将依次打开：通知、精确闹钟、电池优化、悬浮窗、自启动。每完成一项会自动进入下一项。</string>
     <string name="permissions_setup_done">权限配置完成</string>
+    <string name="vibration_test">振动自检</string>
+    <string name="vibration_test_feel">刚刚触发了一次 1.5 秒的测试振动，你感觉到了吗？</string>
+    <string name="vibration_test_yes">感觉到了</string>
+    <string name="vibration_test_no">没有</string>
+    <string name="vibration_test_ok">振动通路正常</string>
+    <string name="vibration_test_failed">振动 API 调用失败</string>
+    <string name="vibration_test_log_empty">暂无响铃诊断记录</string>
+    <string name="diagnostics_title">响铃诊断</string>
     <string name="community_label">大家的推荐</string>
     <string name="recommend_add">推荐一条内容</string>
     <string name="rate_prompt">给这条内容的助眠效果打分（5 = 最有效）</string>
