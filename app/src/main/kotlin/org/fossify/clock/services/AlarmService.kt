@@ -2,19 +2,15 @@ package org.fossify.clock.services
 
 import android.app.Service
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.AudioManager.STREAM_ALARM
-import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
-import androidx.core.net.toUri
-import org.fossify.clock.activities.AlarmActivity
 import org.fossify.clock.extensions.alarmController
 import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
+import org.fossify.commons.extensions.notificationManager
+import org.fossify.clock.helpers.ALARM_ALERT_NOTIFICATION_ID
 import org.fossify.clock.helpers.ALARM_ID
 import org.fossify.clock.helpers.ALARM_NOTIFICATION_ID
 import org.fossify.clock.helpers.AlarmNotificationHelper
@@ -25,18 +21,18 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Service responsible for sounding the alarms and vibrations.
- * It also shows a notification with actions to dismiss or snooze an alarm.
- * Totally based on the previous implementation in the [AlarmActivity].
+ * Service responsible for ringing alarms: light, sound and vibration.
+ *
+ * Ring engine: the alarm sound and the initial vibration are carried by a
+ * dedicated notification channel (system-driven, looping via FLAG_INSISTENT).
+ * OEM power management (MIUI/HyperOS and friends) suppresses media playback and
+ * vibration issued from app processes, but it never blocks its own notification
+ * infrastructure. The in-process vibrator only adds the immediate kick.
  */
 class AlarmService : Service() {
 
     companion object {
-        private const val DEFAULT_ALARM_VOLUME = 7
-        private const val INCREASE_VOLUME_DELAY = 300L
-        private const val MIN_ALARM_VOLUME_FOR_INCREASING_ALARMS = 1
         private const val VIBRATION_PATTERN_TIMING = 500L
-        private const val VOLUME_INCREASE_STEP = 0.1f
         private const val TORCH_ASSERT_INTERVAL_MS = 2000L
 
         const val ACTION_START_ALARM = "org.fossify.clock.START_ALARM"
@@ -44,20 +40,15 @@ class AlarmService : Service() {
     }
 
     private var activeAlarm: Alarm? = null
-    private var initialAlarmVolume = DEFAULT_ALARM_VOLUME
-    private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
-    private lateinit var audioManager: AudioManager
     private lateinit var notificationHelper: AlarmNotificationHelper
 
     private val autoDismissHandler = Handler(Looper.getMainLooper())
-    private val increaseVolumeHandler = Handler(Looper.getMainLooper())
     private val torchAssertHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
-        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         notificationHelper = AlarmNotificationHelper(this)
     }
 
@@ -95,7 +86,7 @@ class AlarmService : Service() {
 
         val replaceActiveAlarm = currentAlarm != null
         if (replaceActiveAlarm) {
-            stopPlayerAndCleanup()
+            stopRingAndCleanup()
             notificationHelper.postReplacedAlarmNotification(currentAlarm!!)
             alarmController.stopAlarm(currentAlarm.id)
         }
@@ -122,39 +113,15 @@ class AlarmService : Service() {
             startTorchWithRetry()
         }
 
+        // system-driven ring: the alert notification loops the alarm sound and
+        // vibrates through its channel, immune to OEM background restrictions
+        if (!alarm.lightOnly || alarm.vibrate) {
+            notificationHelper.postAlertNotification(alarm)
+        }
+
         if (alarm.lightOnly) {
             // light-only alarm: wake the user with light instead of sound
             return
-        }
-
-        if (alarm.soundUri != SILENT) {
-            try {
-                val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-
-                mediaPlayer = MediaPlayer().apply {
-                    setAudioAttributes(audioAttributes)
-                    setDataSource(this@AlarmService, alarm.soundUri.toUri())
-                    isLooping = true
-                    prepare()
-                    start()
-                }
-
-                if (config.increaseVolumeGradually) {
-                    initialAlarmVolume = audioManager.getStreamVolume(STREAM_ALARM)
-                    scheduleVolumeIncrease(
-                        lastVolume = MIN_ALARM_VOLUME_FOR_INCREASING_ALARMS.toFloat(),
-                        maxVolume = initialAlarmVolume.toFloat(),
-                        delay = 0
-                    )
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                mediaPlayer?.release()
-                mediaPlayer = null
-            }
         }
 
         if (alarm.vibrate) {
@@ -178,7 +145,7 @@ class AlarmService : Service() {
         torchAssertHandler.postDelayed(assertRunnable, TORCH_ASSERT_INTERVAL_MS)
     }
 
-    /** Vibration via VibratorManager on 12+, legacy service below - never fatal. */
+    /** Immediate in-process vibration kick on top of the channel vibration. */
     private fun startVibration() {
         try {
             val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
@@ -189,7 +156,8 @@ class AlarmService : Service() {
                 getSystemService(VIBRATOR_SERVICE) as Vibrator
             }
 
-            vibrator?.vibrate(
+            this.vibrator = vibrator
+            vibrator.vibrate(
                 VibrationEffect.createWaveform(
                     longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
                 )
@@ -197,25 +165,6 @@ class AlarmService : Service() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    // Revisit this. We are directly changing the system alarm volume here.
-    private fun scheduleVolumeIncrease(lastVolume: Float, maxVolume: Float, delay: Long) {
-        increaseVolumeHandler.postDelayed({
-            val newVolume = (lastVolume + VOLUME_INCREASE_STEP).coerceAtMost(maxVolume)
-            audioManager.setStreamVolume(STREAM_ALARM, newVolume.toInt(), 0)
-            if (newVolume < maxVolume) {
-                scheduleVolumeIncrease(newVolume, maxVolume, INCREASE_VOLUME_DELAY)
-            }
-        }, delay)
-    }
-
-    private fun resetVolumeToInitialValue() {
-        if (config.increaseVolumeGradually && initialAlarmVolume != DEFAULT_ALARM_VOLUME) {
-            audioManager.setStreamVolume(STREAM_ALARM, initialAlarmVolume, 0)
-        }
-
-        initialAlarmVolume = DEFAULT_ALARM_VOLUME
     }
 
     private fun startAutoDismiss(durationSecs: Int) {
@@ -229,19 +178,15 @@ class AlarmService : Service() {
         }, durationSecs.seconds.inWholeMilliseconds)
     }
 
-    private fun stopPlayerAndCleanup() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
+    private fun stopRingAndCleanup() {
+        notificationManager.cancel(ALARM_ALERT_NOTIFICATION_ID)
         vibrator?.cancel()
         vibrator = null
         TorchHelper.setTorch(this, false)
 
-        // Clear any scheduled volume changes or auto-dismiss messages
-        increaseVolumeHandler.removeCallbacksAndMessages(null)
+        // Clear any scheduled auto-dismiss or torch assert messages
         autoDismissHandler.removeCallbacksAndMessages(null)
         torchAssertHandler.removeCallbacksAndMessages(null)
-        resetVolumeToInitialValue()
     }
 
     private fun stopSelfIfIdle() {
@@ -253,7 +198,7 @@ class AlarmService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopForeground(STOP_FOREGROUND_REMOVE)
-        stopPlayerAndCleanup()
+        stopRingAndCleanup()
     }
 
     override fun onBind(intent: Intent?) = null

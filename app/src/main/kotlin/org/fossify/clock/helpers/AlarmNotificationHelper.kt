@@ -6,7 +6,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
+import org.fossify.commons.helpers.SILENT
 import org.fossify.clock.R
 import org.fossify.clock.activities.AlarmActivity
 import org.fossify.clock.extensions.getFormattedTime
@@ -84,6 +87,93 @@ class AlarmNotificationHelper(private val context: Context) {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setFullScreenIntent(pendingIntent, true)
             .build()
+    }
+
+    /**
+     * Posts the system-driven alarm alert: the channel carries the alarm sound
+     * (looped via FLAG_INSISTENT) and the vibration pattern, so ringing is
+     * executed by the OS itself and survives OEM background restrictions.
+     */
+    fun postAlertNotification(alarm: Alarm) {
+        val channelId = getOrCreateAlertChannel(alarm)
+        val contentTitle = alarm.label.ifEmpty {
+            context.getString(org.fossify.commons.R.string.alarm)
+        }
+        val contentText = context.getFormattedTime(
+            passedSeconds = alarm.timeInMinutes * 60,
+            showSeconds = false,
+            makeAmPmSmaller = false
+        )
+        val reminderIntent = Intent(context, AlarmActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(ALARM_ID, alarm.id)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context, alarm.id, reminderIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setContentTitle(contentTitle)
+            .setContentText(contentText)
+            .setSmallIcon(R.drawable.ic_alarm_vector)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .addAction(
+                org.fossify.commons.R.drawable.ic_snooze_vector,
+                context.getString(org.fossify.commons.R.string.snooze),
+                context.getSnoozePendingIntent(alarm)
+            )
+            .addAction(
+                org.fossify.commons.R.drawable.ic_cross_vector,
+                context.getString(org.fossify.commons.R.string.dismiss),
+                context.getStopAlarmPendingIntent(alarm)
+            )
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setFullScreenIntent(pendingIntent, true)
+            .build()
+
+        notification.flags = notification.flags or Notification.FLAG_INSISTENT
+        context.notificationManager.notify(ALARM_ALERT_NOTIFICATION_ID, notification)
+    }
+
+    /** Fresh channel per sound/vibrate combo so updated params always apply. */
+    private fun getOrCreateAlertChannel(alarm: Alarm): String {
+        val hasSound = !alarm.lightOnly && alarm.soundUri != SILENT
+        val channelId = "alarm_alert_${(alarm.soundUri to alarm.vibrate).hashCode()}"
+
+        try {
+            context.notificationManager.deleteNotificationChannel(channelId)
+        } catch (e: Exception) {
+        }
+
+        val channel = NotificationChannel(
+            channelId,
+            context.getString(org.fossify.commons.R.string.alarm),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setBypassDnd(true)
+            if (hasSound) {
+                val audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+                setSound(alarm.soundUri.toUri(), audioAttributes)
+            } else {
+                setSound(null, null)
+            }
+            if (alarm.vibrate) {
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 500)
+            } else {
+                enableVibration(false)
+            }
+            enableLights(true)
+        }
+
+        context.notificationManager.createNotificationChannel(channel)
+        return channelId
     }
 
     /**
