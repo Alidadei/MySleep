@@ -68,6 +68,14 @@
     <string name="hub_favorites_subtitle">小说 · 音频 · 网页链接</string>
     <string name="hub_picks_subtitle">白噪音 · 有声书 · 雨声</string>
     <string name="report_subtitle_empty">还没有起床记录</string>
+    <string name="alarms_reliability_section">闹钟可靠性</string>
+    <string name="permissions_setup">一键开启所需权限</string>
+    <string name="permissions_setup_confirm">将依次打开：通知、精确闹钟、电池优化、悬浮窗、自启动。每完成一项会自动进入下一项。</string>
+    <string name="permissions_setup_done">权限配置完成</string>
+    <string name="community_label">大家的推荐</string>
+    <string name="recommend_add">推荐一条内容</string>
+    <string name="rate_prompt">给这条内容的助眠效果打分（5 = 最有效）</string>
+    <string name="community_rating_fmt">★ %1$.1f · %2$d 次评价</string>
     <string name="battery_prompt_title">让闹钟准时响铃</string>
     <string name="autostart_prompt_title">重启后也能响铃</string>
     <string name="autostart_prompt_message">手机厂商默认禁止应用开机自启。请在下一个界面允许“睡眠站台”自启动，重启手机后闹钟才能照常响。</string>

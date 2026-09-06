@@ -24,6 +24,7 @@ import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.getEnabledAlarms
 import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
 import org.fossify.clock.extensions.updateWidgets
+import org.fossify.clock.helpers.AutoStartHelper
 import org.fossify.clock.helpers.INVALID_TIMER_ID
 import org.fossify.clock.helpers.OPEN_TAB
 import org.fossify.clock.helpers.PICK_AUDIO_FILE_INTENT_ID
@@ -167,46 +168,8 @@ class MainActivity : SimpleActivity() {
     }
 
     /** 自启动设置页，按厂商直达（激进杀后台的 ROM 全在清单里）。 */
-    private fun getAutoStartIntent(): Intent? {
-        val manufacturer = Build.MANUFACTURER.lowercase(Locale.getDefault())
-        val component = when {
-            manufacturer.contains("xiaomi") || manufacturer.contains("redmi") ->
-                ComponentName(
-                    "com.miui.securitycenter",
-                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
-                )
+    private fun getAutoStartIntent(): Intent? = AutoStartHelper.getIntent(this)
 
-            manufacturer.contains("huawei") || manufacturer.contains("honor") ->
-                ComponentName(
-                    "com.huawei.systemmanager",
-                    "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"
-                )
-
-            manufacturer.contains("oppo") || manufacturer.contains("realme") ->
-                ComponentName(
-                    "com.coloros.safecenter",
-                    "com.coloros.safecenter.permission.startup.StartupAppListActivity"
-                )
-
-            manufacturer.contains("vivo") || manufacturer.contains("iqoo") ->
-                ComponentName(
-                    "com.vivo.permissionmanager",
-                    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
-                )
-
-            manufacturer.contains("meizu") ->
-                ComponentName("com.meizu.safe", "com.meizu.safe.permission.SmartBGActivity")
-
-            else -> null
-        }
-
-        return component?.let {
-            Intent().apply {
-                this.component = it
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        }
-    }
 
     override fun onResume() {
         super.onResume()

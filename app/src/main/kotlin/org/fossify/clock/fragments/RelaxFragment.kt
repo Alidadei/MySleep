@@ -21,6 +21,8 @@ import org.fossify.clock.activities.SleepReportActivity
 import org.fossify.clock.databinding.FragmentRelaxBinding
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.requiredActivity
+import org.fossify.clock.helpers.CommunityPick
+import org.fossify.clock.helpers.PicksRepository
 import org.fossify.clock.helpers.RelaxItem
 import org.fossify.clock.helpers.RelaxStore
 import org.fossify.commons.extensions.applyColorFilter
@@ -30,7 +32,6 @@ import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.toast
-import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.helpers.ensureBackgroundThread
 import kotlin.math.roundToInt
 
@@ -85,6 +86,7 @@ class RelaxFragment : Fragment() {
 
         binding.relaxBack.setOnClickListener { showHub() }
         binding.relaxAddFavorite.setOnClickListener { showAddChoiceDialog() }
+        binding.relaxRecommend.setOnClickListener { showRecommendDialog() }
 
         showHub()
         refreshReportSubtitle()
@@ -114,18 +116,28 @@ class RelaxFragment : Fragment() {
             if (section == Section.FAVORITES) R.string.relax_custom_label else R.string.relax_picks_label
         )
         populateSection(section)
-        requireActivity().updateTextColors(binding.relaxSection)
     }
 
     private fun populateSection(section: Section) {
         binding.relaxHolder.removeAllViews()
 
         if (section == Section.PICKS) {
-            RelaxStore.getBuiltIns().forEach { item ->
+            PicksRepository.getPicks(requireContext()).forEach { item ->
                 addItemRow(item, deletable = false)
+            }
+            addSectionLabel(getString(R.string.community_label))
+            val communityPicks = RelaxStore.getCommunityPicks(requireContext())
+                .sortedWith(
+                    compareByDescending<CommunityPick> { it.ratings?.average() ?: 0.0 }
+                        .thenByDescending { it.ratings?.size ?: 0 }
+                        .thenByDescending { it.addedAt }
+                )
+            communityPicks.forEach { pick ->
+                addCommunityRow(pick)
             }
             binding.relaxEmptyCustom.beGone()
             binding.relaxAddFavorite.beGone()
+            binding.relaxRecommend.beVisible()
             return
         }
 
@@ -135,6 +147,7 @@ class RelaxFragment : Fragment() {
         }
         binding.relaxEmptyCustom.beVisibleIf(customItems.isEmpty())
         binding.relaxAddFavorite.beVisible()
+        binding.relaxRecommend.beGone()
     }
 
     private fun refreshReportSubtitle() {
@@ -170,6 +183,14 @@ class RelaxFragment : Fragment() {
         }
     }
 
+    private fun addSectionLabel(text: String) {
+        val label = LayoutInflater.from(requireContext()).inflate(
+            R.layout.item_relax_section, binding.relaxHolder, false
+        ) as org.fossify.commons.views.MyTextView
+        label.text = text
+        binding.relaxHolder.addView(label)
+    }
+
     private fun addItemRow(item: RelaxItem, deletable: Boolean) {
         val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
@@ -203,6 +224,101 @@ class RelaxFragment : Fragment() {
         }
 
         binding.relaxHolder.addView(row)
+    }
+
+    private fun addCommunityRow(pick: CommunityPick) {
+        val row = LayoutInflater.from(requireContext()).inflate(
+            R.layout.item_relax, binding.relaxHolder, false
+        ) as LinearLayout
+
+        row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
+            .text = pick.title
+        val ratings = pick.ratings
+        row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
+            .text = if (!ratings.isNullOrEmpty()) {
+                getString(R.string.community_rating_fmt, ratings.average(), ratings.size)
+            } else {
+                pick.url
+            }
+
+        row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }
+        row.setOnLongClickListener {
+            showRateDialog(pick)
+            true
+        }
+
+        binding.relaxHolder.addView(row)
+    }
+
+    private fun showRateDialog(pick: CommunityPick) {
+        val labels = (1..5).map { "★ $it" }.toTypedArray()
+        val current = pick.ratings?.lastOrNull() ?: 0
+
+        requireActivity().getAlertDialogBuilder()
+            .setTitle(R.string.rate_prompt)
+            .setSingleChoiceItems(labels, current - 1) { dialog, which ->
+                RelaxStore.rateCommunityPick(requireContext(), pick.id, which + 1)
+                dialog?.dismiss()
+                populateSection(Section.PICKS)
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
+    }
+
+    private fun showRecommendDialog() {
+        val holder = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                resources.displayMetrics.widthPixels / 10, 40,
+                resources.displayMetrics.widthPixels / 10, 0
+            )
+        }
+
+        val titleInput = EditText(requireContext()).apply {
+            hint = getString(R.string.relax_title_hint)
+        }
+        val urlInput = EditText(requireContext()).apply {
+            hint = getString(R.string.relax_url_hint)
+        }
+
+        holder.addView(titleInput)
+        holder.addView(urlInput)
+
+        val dialog = requireActivity().getAlertDialogBuilder()
+            .setTitle(R.string.recommend_add)
+            .setPositiveButton(org.fossify.commons.R.string.ok, null)
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .create()
+
+        dialog.setOnShowListener {
+            val okButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            okButton.isEnabled = false
+
+            val inputWatcher = object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    okButton.isEnabled = titleInput.text.isNotBlank() &&
+                        RelaxStore.isValidUrl(urlInput.text.toString())
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+            }
+            titleInput.addTextChangedListener(inputWatcher)
+            urlInput.addTextChangedListener(inputWatcher)
+
+            okButton.setOnClickListener {
+                RelaxStore.addCommunityPick(
+                    requireContext(),
+                    titleInput.text.toString().trim(),
+                    RelaxStore.normalizeUrl(urlInput.text.toString())
+                )
+                dialog.dismiss()
+                populateSection(Section.PICKS)
+            }
+        }
+
+        dialog.setView(holder)
+        dialog.show()
     }
 
     private fun showAddChoiceDialog() {

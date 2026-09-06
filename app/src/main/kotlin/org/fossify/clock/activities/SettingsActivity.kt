@@ -1,6 +1,10 @@
 package org.fossify.clock.activities
 
 import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,7 +17,9 @@ import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.timerDb
 import org.fossify.clock.extensions.updateWidgets
+import org.fossify.clock.helpers.AutoStartHelper
 import org.fossify.clock.helpers.DEFAULT_MAX_ALARM_REMINDER_SECS
+import org.fossify.clock.extensions.alarmManager
 import org.fossify.clock.helpers.DEFAULT_MAX_TIMER_REMINDER_SECS
 import org.fossify.clock.helpers.EXPORT_BACKUP_MIME_TYPE
 import org.fossify.clock.helpers.ExportHelper
@@ -32,6 +38,7 @@ import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.formatMinutesToTimeString
 import org.fossify.commons.extensions.formatSecondsToTimeString
+import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.isOrWasThankYouInstalled
 import org.fossify.commons.extensions.showPickSecondsDialog
@@ -52,6 +59,18 @@ import kotlin.system.exitProcess
 
 class SettingsActivity : SimpleActivity() {
     private val binding: ActivitySettingsBinding by viewBinding(ActivitySettingsBinding::inflate)
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            runNextPermissionStep()
+        }
+
+    private val settingsIntentLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            runNextPermissionStep()
+        }
+
+    private var permissionSteps = mutableListOf<() -> Unit>()
     private val exportActivityResultLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument(EXPORT_BACKUP_MIME_TYPE)) { uri ->
             if (uri == null) return@registerForActivityResult
@@ -79,6 +98,9 @@ class SettingsActivity : SimpleActivity() {
     override fun onResume() {
         super.onResume()
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
+        binding.settingsPermissionsSetupHolder.setOnClickListener {
+            startPermissionWizard()
+        }
 
         setupCustomizeColors()
         setupUseEnglish()
@@ -303,6 +325,80 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsImportDataHolder.setOnClickListener {
             tryImportData()
         }
+    }
+
+    /**
+     * One-tap permission setup: walks through every permission alarms need,
+     * skipping the ones already granted, continuing automatically after each.
+     */
+    private fun startPermissionWizard() {
+        getAlertDialogBuilder()
+            .setTitle(R.string.permissions_setup)
+            .setMessage(R.string.permissions_setup_confirm)
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                buildPermissionSteps()
+                runNextPermissionStep()
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
+    }
+
+    private fun buildPermissionSteps() {
+        permissionSteps = mutableListOf()
+        val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+
+        if (org.fossify.commons.helpers.isTiramisuPlus() &&
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                this, android.Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionSteps.add {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= 31 && !alarmManager.canScheduleExactAlarms()) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))
+                )
+            }
+        }
+
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            permissionSteps.add {
+                settingsIntentLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+        }
+
+        permissionSteps.add {
+            AutoStartHelper.getIntent(this)?.let { settingsIntentLauncher.launch(it) }
+                ?: runNextPermissionStep()
+        }
+    }
+
+    private fun runNextPermissionStep() {
+        if (permissionSteps.isEmpty()) {
+            toast(R.string.permissions_setup_done)
+            return
+        }
+        permissionSteps.removeAt(0).invoke()
     }
 
     private fun exportData(outputUri: Uri) {

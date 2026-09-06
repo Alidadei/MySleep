@@ -6,9 +6,23 @@ import com.google.gson.reflect.TypeToken
 import androidx.core.net.toUri
 
 /**
- * Bedtime relax favorites: a small built-in curated list ("AI picks") plus anything the
- * user adds themselves. Custom entries live in shared preferences as JSON.
+ * Bedtime relax favorites: curated picks (via [PicksRepository]) plus anything
+ * the user adds themselves, and community recommendations with effectiveness
+ * ratings. Community entries live in shared preferences as JSON - when the
+ * backend lands, this store is the swap point for server sync.
  */
+
+/**
+ * A user-submitted recommendation other users can try and rate (1-5, how well
+ * it helped them fall asleep). Aggregated by average rating.
+ */
+data class CommunityPick(
+    val id: Long,
+    val title: String,
+    val url: String,
+    var ratings: MutableList<Int>? = null,
+    var addedAt: Long = 0,
+)
 data class RelaxItem(
     val id: Long,
     val title: String,
@@ -21,6 +35,7 @@ object RelaxStore {
 
     private const val PREFS_NAME = "relax_favorites"
     private const val KEY_CUSTOM_ITEMS = "custom_items_json"
+    private const val KEY_COMMUNITY_PICKS = "community_picks_json"
 
     fun getBuiltIns(): List<RelaxItem> = listOf(
         RelaxItem(
@@ -102,5 +117,49 @@ object RelaxStore {
         normalizeUrl(url).toUri().host != null
     } catch (e: Exception) {
         false
+    }
+
+    // ---- community recommendations ----
+
+    fun getCommunityPicks(context: Context): MutableList<CommunityPick> {
+        val json = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_COMMUNITY_PICKS, null) ?: return mutableListOf()
+
+        return try {
+            val type = object : TypeToken<MutableList<CommunityPick>>() {}.type
+            Gson().fromJson(json, type) ?: mutableListOf()
+        } catch (e: Exception) {
+            mutableListOf()
+        }
+    }
+
+    fun addCommunityPick(context: Context, title: String, url: String) {
+        val picks = getCommunityPicks(context)
+        picks.add(
+            CommunityPick(
+                id = System.currentTimeMillis(),
+                title = title,
+                url = url,
+                ratings = mutableListOf(),
+                addedAt = System.currentTimeMillis()
+            )
+        )
+        saveCommunityPicks(context, picks)
+    }
+
+    fun rateCommunityPick(context: Context, id: Long, rating: Int) {
+        val picks = getCommunityPicks(context)
+        picks.firstOrNull { it.id == id }?.let { pick ->
+            val ratings = pick.ratings ?: mutableListOf<Int>().also { pick.ratings = it }
+            ratings.add(rating.coerceIn(1, 5))
+            saveCommunityPicks(context, picks)
+        }
+    }
+
+    private fun saveCommunityPicks(context: Context, picks: List<CommunityPick>) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_COMMUNITY_PICKS, Gson().toJson(picks))
+            .apply()
     }
 }

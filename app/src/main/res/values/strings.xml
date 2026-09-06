@@ -72,6 +72,14 @@
     <string name="hub_favorites_subtitle">Novels · audio · web links</string>
     <string name="hub_picks_subtitle">White noise · audiobooks · rain</string>
     <string name="report_subtitle_empty">No wake-up records yet</string>
+    <string name="alarms_reliability_section">Alarm reliability</string>
+    <string name="permissions_setup">Set up all permissions at once</string>
+    <string name="permissions_setup_confirm">The following screens will open one by one: notifications, exact alarms, battery optimization, display over other apps and autostart. Each step continues automatically after you finish it.</string>
+    <string name="permissions_setup_done">Permission setup finished</string>
+    <string name="community_label">Community picks</string>
+    <string name="recommend_add">Recommend content</string>
+    <string name="rate_prompt">Rate how well this helped you sleep (5 = best)</string>
+    <string name="community_rating_fmt">★ %1$.1f · %2$d ratings</string>
     <string name="battery_prompt_title">Reliable alarms</string>
     <string name="autostart_prompt_title">Alarms after reboot</string>
     <string name="autostart_prompt_message">Your phone maker blocks apps from starting themselves by default. Allow autostart for Sleep Station on the next screen so alarms keep working after a reboot.</string>
