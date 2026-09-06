@@ -12,13 +12,9 @@ import org.fossify.clock.extensions.getOpenTimerTabIntent
 import org.fossify.clock.extensions.getTimerNotification
 import org.fossify.clock.extensions.hideNotification
 import org.fossify.clock.extensions.timerHelper
-import org.fossify.clock.helpers.Stopwatch
-import org.fossify.clock.helpers.Stopwatch.State
 import org.fossify.clock.models.TimerEvent
 import org.fossify.clock.models.TimerState
-import org.fossify.clock.services.StopwatchStopService
 import org.fossify.clock.services.TimerStopService
-import org.fossify.clock.services.startStopwatchService
 import org.fossify.clock.services.startTimerService
 import org.fossify.commons.FossifyApp
 import org.fossify.commons.extensions.notificationManager
@@ -49,9 +45,6 @@ class App : FossifyApp(), LifecycleObserver {
                 startTimerService(this)
             }
         }
-        if (Stopwatch.state == State.RUNNING) {
-            startStopwatchService(this)
-        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -69,9 +62,6 @@ class App : FossifyApp(), LifecycleObserver {
                     )
                 }
             }
-        }
-        if (Stopwatch.state == State.RUNNING) {
-            EventBus.getDefault().post(StopwatchStopService)
         }
     }
 

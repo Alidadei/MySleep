@@ -18,7 +18,6 @@ data class Alarm(
     var oneShot: Boolean = false,
     var enableTorch: Boolean = false,
     var lightOnly: Boolean = false,
-    var sunriseMinutes: Int = 0,
 ) {
     fun isRecurring() = days > 0
 
@@ -42,7 +41,6 @@ data class ObfuscatedAlarm(
     var i: Boolean = false,
     var j: Boolean = false,
     var k: Boolean = false,
-    var l: Int = 0,
 ) {
-    fun toAlarm() = Alarm(a, b, c, d, e, f, g, h, i, j, k, l)
+    fun toAlarm() = Alarm(a, b, c, d, e, f, g, h, i, j, k)
 }

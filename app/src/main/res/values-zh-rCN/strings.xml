@@ -6,10 +6,6 @@
     <string name="no_days_selected">未选择哪一天</string>
     <string name="clock">时钟</string>
     <string name="timer">定时器</string>
-    <string name="stopwatch">秒表</string>
-    <string name="start_stopwatch">启动秒表</string>
-    <string name="lap">分段</string>
-    <string name="stopwatch_stopped">秒表已停止</string>
     <string name="timer_stopped">已停止定时器</string>
     <string name="max_reminder_duration">最长提醒持续时间</string>
     <string name="time_expired">时间结束</string>
@@ -39,12 +35,9 @@
     </plurals>
     <string name="clock_tab">时钟页面</string>
     <string name="alarm_tab">闹钟页面</string>
-    <string name="stopwatch_tab">秒表页面</string>
     <string name="timer_tab">定时器页面</string>
     <string name="show_seconds">显示秒数</string>
     <string name="increase_volume_gradually">音量渐增</string>
-    <string name="faq_1_title">秒表页面分段的排序如何更改?</string>
-    <string name="faq_1_text">只要点击任一栏位，就会依据选定的栏位做排序。再多点一下，还能切换递增或者递减顺序。</string>
     <string name="settings_export_data">导出闹钟和定时器</string>
     <string name="settings_import_data">导入闹钟和定时器</string>
     <string name="sort_by_timer_duration">计时器持续时长</string>
@@ -56,11 +49,6 @@
     <!-- 光唤醒 -->
     <string name="torch_on_alarm">响铃时亮手电筒</string>
     <string name="light_only_wake">仅光唤醒（不响铃）</string>
-    <string name="sunrise_fade_in">日出渐亮</string>
-    <string name="sunrise_fade_off">关闭</string>
-    <string name="sunrise_fade_minutes">提前 %d 分钟渐亮</string>
-    <string name="sunrise_service_note">日出渐亮进行中</string>
-    <string name="sunrise_hint">日出渐亮中 · 轻触屏幕隐藏画面，灯光会继续</string>
     <string name="tab_relax">助眠</string>
     <string name="type_once">单次</string>
     <string name="type_repeat">重复</string>

@@ -27,7 +27,6 @@ import org.fossify.clock.helpers.IMPORT_BACKUP_MIME_TYPES
 import org.fossify.clock.helpers.ImportHelper
 import org.fossify.clock.helpers.TAB_ALARM
 import org.fossify.clock.helpers.TAB_RELAX
-import org.fossify.clock.helpers.TAB_STOPWATCH
 import org.fossify.clock.helpers.TAB_TIMER
 import org.fossify.clock.helpers.TimerHelper
 import org.fossify.clock.models.AlarmTimerBackup
@@ -164,7 +163,6 @@ class SettingsActivity : SimpleActivity() {
             val items = arrayListOf(
                 RadioItem(TAB_RELAX, getString(R.string.tab_relax)),
                 RadioItem(TAB_ALARM, getString(org.fossify.commons.R.string.alarm)),
-                RadioItem(TAB_STOPWATCH, getString(R.string.stopwatch)),
                 RadioItem(TAB_TIMER, getString(R.string.timer)),
                 RadioItem(TAB_LAST_USED, getString(org.fossify.commons.R.string.last_used_tab))
             )
@@ -189,7 +187,6 @@ class SettingsActivity : SimpleActivity() {
         when (config.defaultTab) {
             TAB_RELAX -> R.string.tab_relax
             TAB_ALARM -> org.fossify.commons.R.string.alarm
-            TAB_STOPWATCH -> R.string.stopwatch
             TAB_TIMER -> R.string.timer
             else -> org.fossify.commons.R.string.last_used_tab
         }

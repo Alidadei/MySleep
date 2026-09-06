@@ -26,7 +26,6 @@ const val TIMER_SOUND_URI = "timer_sound_uri"
 const val TIMER_SOUND_TITLE = "timer_sound_title"
 const val TIMER_CHANNEL_ID = "timer_channel_id"
 const val TIMER_LABEL = "timer_label"
-const val TOGGLE_STOPWATCH = "toggle_stopwatch"
 const val TIMER_MAX_REMINDER_SECS = "timer_max_reminder_secs"
 const val ALARM_MAX_REMINDER_SECS = "alarm_max_reminder_secs"
 const val ALARM_LAST_CONFIG = "alarm_last_config"
@@ -36,13 +35,12 @@ const val ALARMS_SORT_BY = "alarms_sort_by"
 const val ALARMS_CUSTOM_SORTING = "alarms_custom_sorting"
 const val TIMERS_SORT_BY = "timers_sort_by"
 const val TIMERS_CUSTOM_SORTING = "timers_custom_sorting"
-const val STOPWATCH_LAPS_SORT_BY = "stopwatch_laps_sort_by"
 const val WAS_INITIAL_WIDGET_SET_UP = "was_initial_widget_set_up"
 const val DATA_EXPORT_EXTENSION = ".json"
 const val LAST_DATA_EXPORT_PATH = "last_alarms_export_path"
 const val MIGRATE_FIRST_DAY_OF_WEEK = "migrate_first_day_of_week"
 
-const val TABS_COUNT = 4
+const val TABS_COUNT = 3
 const val EDITED_TIME_ZONE_SEPARATOR = ":"
 const val ALARM_ID = "alarm_id"
 const val NOTIFICATION_ID = "notification_id"
@@ -55,7 +53,6 @@ const val UPCOMING_ALARM_CHANNEL_ID = "Early Alarm Dismissal"
 const val MISSED_ALARM_NOTIFICATION_CHANNEL_ID = "missed_alarm_channel"
 const val MISSED_ALARM_NOTIFICATION_TAG = "missed_alarm_tag"
 
-const val OPEN_STOPWATCH_TAB_INTENT_ID = 9993
 const val PICK_AUDIO_FILE_INTENT_ID = 9994
 const val OPEN_ALARMS_TAB_INTENT_ID = 9996
 const val OPEN_APP_INTENT_ID = 9997
@@ -64,12 +61,6 @@ const val TIMER_RUNNING_NOTIFICATION_ID = 10000
 const val STOPWATCH_RUNNING_NOTIFICATION_ID = 10001
 const val UPCOMING_ALARM_INTENT_ID = 10002
 const val UPCOMING_ALARM_NOTIFICATION_ID = 10003
-const val SUNRISE_ALARM_INTENT_ID = 10004
-const val SUNRISE_NOTIFICATION_ID = 10005
-const val SUNRISE_SCREEN_NOTIFICATION_ID = 10006
-
-const val SUNRISE_DURATION_MIN = "sunrise_duration_min"
-const val SUNRISE_NOTIFICATION_CHANNEL_ID = "sunrise_channel"
 const val AUTOSTART_PROMPT_SHOWN = "autostart_prompt_shown"
 
 const val OPEN_TAB = "open_tab"
@@ -79,18 +70,10 @@ const val TAB_STOPWATCH = 4
 const val TAB_TIMER = 8
 const val TAB_RELAX_INDEX = 0
 const val TAB_ALARM_INDEX = 1
-const val TAB_STOPWATCH_INDEX = 2
-const val TAB_TIMER_INDEX = 3
+const val TAB_TIMER_INDEX = 2
 
 const val TIMER_ID = "timer_id"
 const val INVALID_TIMER_ID = -1
-
-// stopwatch sorting
-const val SORT_BY_LAP = 1
-const val SORT_BY_LAP_TIME = 2
-const val SORT_BY_TOTAL_TIME = 4
-
-const val STOPWATCH_LIVE_LAP_ID = Int.MAX_VALUE
 
 // alarm and timer sorting
 const val SORT_BY_CREATION_ORDER = 0
@@ -100,10 +83,6 @@ const val SORT_BY_TIMER_DURATION = 3
 
 const val TODAY_BIT = -1
 const val TOMORROW_BIT = -2
-
-// stopwatch shortcut
-const val STOPWATCH_SHORTCUT_ID = "stopwatch_shortcut_id"
-const val STOPWATCH_TOGGLE_ACTION = "org.fossify.clock.TOGGLE_STOPWATCH"
 
 // time formatting
 const val FORMAT_12H = "h:mm a"

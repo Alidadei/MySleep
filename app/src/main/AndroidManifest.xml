@@ -46,7 +46,6 @@
             </intent-filter>
 
             <intent-filter>
-                <action android:name="org.fossify.clock.TOGGLE_STOPWATCH" />
                 <action android:name="android.intent.action.SHOW_ALARMS" />
                 <action android:name="android.intent.action.SHOW_TIMERS" />
                 <action android:name="android.intent.action.SET_ALARM" />
@@ -126,14 +125,6 @@
             android:exported="false"
             android:theme="@style/Theme.Transparent" />
 
-        <activity
-            android:name=".activities.SunriseActivity"
-            android:configChanges="orientation|screenSize|screenLayout"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:showOnLockScreen="true"
-            android:taskAffinity=".SunriseActivity"
-            android:theme="@style/Theme.Transparent" />
 
         <activity
             android:name=".activities.SleepReportActivity"
@@ -181,25 +172,9 @@
                 android:value="Used to notify the user that timers are running" />
         </service>
 
-        <service
-            android:name=".services.StopwatchService"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Used to notify the user that stopwatch is running" />
-        </service>
-
-        <service
-            android:name=".services.SunriseService"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Used to fade the flashlight in before alarms ring" />
-        </service>
 
         <receiver android:name=".receivers.AlarmReceiver" />
 
-        <receiver android:name=".receivers.SunriseReceiver" />
 
         <receiver android:name=".receivers.HideTimerReceiver" />
 

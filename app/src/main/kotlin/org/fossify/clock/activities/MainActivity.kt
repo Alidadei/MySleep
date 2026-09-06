@@ -4,9 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ShortcutInfo
-import android.graphics.drawable.Icon
-import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
@@ -28,23 +25,17 @@ import org.fossify.clock.helpers.AutoStartHelper
 import org.fossify.clock.helpers.INVALID_TIMER_ID
 import org.fossify.clock.helpers.OPEN_TAB
 import org.fossify.clock.helpers.PICK_AUDIO_FILE_INTENT_ID
-import org.fossify.clock.helpers.STOPWATCH_SHORTCUT_ID
-import org.fossify.clock.helpers.STOPWATCH_TOGGLE_ACTION
 import org.fossify.clock.helpers.TABS_COUNT
 import org.fossify.clock.helpers.TAB_ALARM
 import org.fossify.clock.helpers.TAB_ALARM_INDEX
 import org.fossify.clock.helpers.TAB_RELAX
 import org.fossify.clock.helpers.TAB_RELAX_INDEX
-import org.fossify.clock.helpers.TAB_STOPWATCH
-import org.fossify.clock.helpers.TAB_STOPWATCH_INDEX
 import org.fossify.clock.helpers.TAB_TIMER
 import org.fossify.clock.helpers.TAB_TIMER_INDEX
 import org.fossify.clock.helpers.TIMER_ID
-import org.fossify.clock.helpers.TOGGLE_STOPWATCH
 import org.fossify.commons.databinding.BottomTablayoutItemBinding
 import org.fossify.commons.extensions.appLaunched
 import org.fossify.commons.extensions.applyColorFilter
-import org.fossify.commons.extensions.convertToBitmap
 import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.getBottomNavigationBackgroundColor
 import org.fossify.commons.extensions.getProperBackgroundColor
@@ -198,45 +189,6 @@ class MainActivity : SimpleActivity() {
         }
 
         setupTabColors()
-        checkShortcuts()
-    }
-
-    @SuppressLint("NewApi")
-    private fun checkShortcuts() {
-        // fixed brand gold, matching the moon launcher icon
-        val shortcutColor = 0xFFF2D38B.toInt()
-        if (config.lastHandledShortcutColor != shortcutColor) {
-            val stopWatchShortcutInfo = getLaunchStopwatchShortcut(shortcutColor)
-
-            try {
-                shortcutManager.dynamicShortcuts = listOf(stopWatchShortcutInfo)
-                config.lastHandledShortcutColor = shortcutColor
-            } catch (ignored: Exception) {
-            }
-        }
-    }
-
-    @SuppressLint("NewApi")
-    private fun getLaunchStopwatchShortcut(appIconColor: Int): ShortcutInfo {
-        val newEvent = getString(R.string.start_stopwatch)
-        val drawable = resources.getDrawable(R.drawable.shortcut_stopwatch)
-        (drawable as LayerDrawable)
-            .findDrawableByLayerId(R.id.shortcut_stopwatch_background)
-            .applyColorFilter(appIconColor)
-        val bmp = drawable.convertToBitmap()
-
-        val intent = Intent(this, SplashActivity::class.java).apply {
-            putExtra(OPEN_TAB, TAB_STOPWATCH)
-            putExtra(TOGGLE_STOPWATCH, true)
-            action = STOPWATCH_TOGGLE_ACTION
-        }
-
-        return ShortcutInfo.Builder(this, STOPWATCH_SHORTCUT_ID)
-            .setShortLabel(newEvent)
-            .setLongLabel(newEvent)
-            .setIcon(Icon.createWithBitmap(bmp))
-            .setIntent(intent)
-            .build()
     }
 
     override fun onPause() {
@@ -281,11 +233,6 @@ class MainActivity : SimpleActivity() {
             if (tabToOpen == TAB_TIMER) {
                 val timerId = intent.getIntExtra(TIMER_ID, INVALID_TIMER_ID)
                 (binding.viewPager.adapter as ViewPagerAdapter).updateTimerPosition(timerId)
-            }
-            if (tabToOpen == TAB_STOPWATCH) {
-                if (intent.getBooleanExtra(TOGGLE_STOPWATCH, false)) {
-                    (binding.viewPager.adapter as ViewPagerAdapter).startStopWatch()
-                }
             }
         }
         super.onNewIntent(intent)
@@ -332,10 +279,6 @@ class MainActivity : SimpleActivity() {
             viewPagerAdapter.updateTimerPosition(timerId)
         }
 
-        if (tabToOpen == TAB_STOPWATCH) {
-            config.toggleStopwatch = intent.getBooleanExtra(TOGGLE_STOPWATCH, false)
-        }
-
         binding.viewPager.offscreenPageLimit = TABS_COUNT - 1
         binding.viewPager.currentItem = getTabIndex(tabToOpen)
     }
@@ -345,13 +288,11 @@ class MainActivity : SimpleActivity() {
         val tabDrawables = arrayOf(
             R.drawable.ic_tab_relax,
             R.drawable.ic_alarm_vector,
-            R.drawable.ic_stopwatch_vector,
             R.drawable.ic_hourglass_vector
         )
         val tabLabels = arrayOf(
             R.string.tab_relax,
             org.fossify.commons.R.string.alarm,
-            R.string.stopwatch,
             R.string.timer
         )
 
@@ -406,20 +347,18 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun getInactiveTabIndexes(activeIndex: Int): List<Int> {
-        return arrayListOf(0, 1, 2, 3).filter { it != activeIndex }
+        return arrayListOf(0, 1, 2).filter { it != activeIndex }
     }
 
     private fun getSelectedTabDrawableIds() = arrayOf(
         R.drawable.ic_clock_filled_vector,
         R.drawable.ic_alarm_filled_vector,
-        R.drawable.ic_stopwatch_filled_vector,
         R.drawable.ic_hourglass_filled_vector
     )
 
     private fun getDeselectedTabDrawableIds() = arrayOf(
         org.fossify.commons.R.drawable.ic_clock_vector,
         R.drawable.ic_alarm_vector,
-        R.drawable.ic_stopwatch_vector,
         R.drawable.ic_hourglass_vector
     )
 
@@ -432,10 +371,6 @@ class MainActivity : SimpleActivity() {
             LICENSE_NUMBER_PICKER or LICENSE_RTL or LICENSE_AUTOFITTEXTVIEW
 
         val faqItems = arrayListOf(
-            FAQItem(
-                title = R.string.faq_1_title,
-                text = R.string.faq_1_text
-            ),
             FAQItem(
                 title = org.fossify.commons.R.string.faq_1_title_commons,
                 text = org.fossify.commons.R.string.faq_1_text_commons
@@ -486,7 +421,6 @@ class MainActivity : SimpleActivity() {
         return when (tabId) {
             TAB_RELAX -> TAB_RELAX_INDEX
             TAB_ALARM -> TAB_ALARM_INDEX
-            TAB_STOPWATCH -> TAB_STOPWATCH_INDEX
             TAB_TIMER -> TAB_TIMER_INDEX
             else -> config.lastUsedViewPagerPage
         }

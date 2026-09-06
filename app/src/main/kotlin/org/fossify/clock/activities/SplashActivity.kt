@@ -21,14 +21,6 @@ class SplashActivity : BaseSplashActivity() {
                 }
             }
 
-            intent?.action == STOPWATCH_TOGGLE_ACTION -> {
-                Intent(this, MainActivity::class.java).apply {
-                    putExtra(OPEN_TAB, TAB_STOPWATCH)
-                    putExtra(TOGGLE_STOPWATCH, intent.getBooleanExtra(TOGGLE_STOPWATCH, false))
-                    startActivity(this)
-                }
-            }
-
             intent.extras?.containsKey(OPEN_TAB) == true -> {
                 Intent(this, MainActivity::class.java).apply {
                     putExtra(OPEN_TAB, intent.getIntExtra(OPEN_TAB, TAB_RELAX))

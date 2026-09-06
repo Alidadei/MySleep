@@ -35,17 +35,13 @@ import org.fossify.clock.helpers.MyAnalogueTimeWidgetProvider
 import org.fossify.clock.helpers.MyDigitalTimeWidgetProvider
 import org.fossify.clock.helpers.NOTIFICATION_ID
 import org.fossify.clock.helpers.OPEN_ALARMS_TAB_INTENT_ID
-import org.fossify.clock.helpers.OPEN_STOPWATCH_TAB_INTENT_ID
 import org.fossify.clock.helpers.OPEN_TAB
-import org.fossify.clock.helpers.SUNRISE_ALARM_INTENT_ID
 import org.fossify.clock.helpers.TAB_ALARM
-import org.fossify.clock.helpers.TAB_STOPWATCH
 import org.fossify.clock.helpers.TAB_TIMER
 import org.fossify.clock.helpers.TIMER_ID
 import org.fossify.clock.helpers.TODAY_BIT
 import org.fossify.clock.helpers.TOMORROW_BIT
 import org.fossify.clock.helpers.TimerHelper
-import org.fossify.clock.helpers.TorchHelper
 import org.fossify.clock.helpers.UPCOMING_ALARM_INTENT_ID
 import org.fossify.clock.helpers.formatTime
 import org.fossify.clock.helpers.getAllTimeZones
@@ -60,7 +56,6 @@ import org.fossify.clock.receivers.AlarmReceiver
 import org.fossify.clock.receivers.HideTimerReceiver
 import org.fossify.clock.receivers.SkipUpcomingAlarmReceiver
 import org.fossify.clock.receivers.StopAlarmReceiver
-import org.fossify.clock.receivers.SunriseReceiver
 import org.fossify.clock.receivers.UpcomingAlarmReceiver
 import org.fossify.clock.services.SnoozeService
 import org.fossify.commons.extensions.formatMinutesToTimeString
@@ -202,20 +197,6 @@ fun Context.setupAlarmClock(alarm: Alarm, triggerTimeMillis: Long) {
             getAlarmIntent(alarm)
         )
 
-        // schedule the sunrise fade-in so the torch can ramp up before the ring
-        if (alarm.usesLightWake() && alarm.sunriseMinutes > 0 && TorchHelper.hasFlash(this)) {
-            val sunriseTriggerTime =
-                triggerTimeMillis - alarm.sunriseMinutes.minutes.inWholeMilliseconds
-            if (sunriseTriggerTime > System.currentTimeMillis()) {
-                AlarmManagerCompat.setExactAndAllowWhileIdle(
-                    alarmManager,
-                    0,
-                    sunriseTriggerTime,
-                    getSunrisePendingIntent(alarm)
-                )
-            }
-        }
-
         // show a notification to allow dismissing the alarm 10 minutes before it actually triggers
         val dismissalTriggerTime =
             if (triggerTimeMillis - System.currentTimeMillis() < 10.minutes.inWholeMilliseconds) {
@@ -271,17 +252,6 @@ fun Context.getOpenTimerTabIntent(timerId: Int): PendingIntent {
     )
 }
 
-fun Context.getOpenStopwatchTabIntent(): PendingIntent {
-    val intent = getLaunchIntent() ?: Intent(this, SplashActivity::class.java)
-    intent.putExtra(OPEN_TAB, TAB_STOPWATCH)
-    return PendingIntent.getActivity(
-        this,
-        OPEN_STOPWATCH_TAB_INTENT_ID,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-}
-
 fun Context.getAlarmIntent(alarm: Alarm): PendingIntent {
     val intent = Intent(this, AlarmReceiver::class.java)
     intent.putExtra(ALARM_ID, alarm.id)
@@ -293,22 +263,9 @@ fun Context.getAlarmIntent(alarm: Alarm): PendingIntent {
     )
 }
 
-fun Context.getSunrisePendingIntent(alarm: Alarm): PendingIntent {
-    val intent = Intent(this, SunriseReceiver::class.java).apply {
-        putExtra(ALARM_ID, alarm.id)
-    }
-    return PendingIntent.getBroadcast(
-        this,
-        SUNRISE_ALARM_INTENT_ID,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-}
-
 fun Context.cancelAlarmClock(alarm: Alarm) {
     val alarmManager = alarmManager
     alarmManager.cancel(getAlarmIntent(alarm))
-    alarmManager.cancel(getSunrisePendingIntent(alarm))
     alarmManager.cancel(getUpcomingAlarmPendingIntent(alarm))
 }
 

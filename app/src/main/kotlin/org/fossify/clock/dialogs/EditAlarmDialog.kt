@@ -266,10 +266,8 @@ class EditAlarmDialog(
             // no flash unit on this device, don't tease the user with light options
             binding.editAlarmTorchHolder.beGone()
             binding.editAlarmLightOnlyHolder.beGone()
-            binding.editAlarmSunriseHolder.beGone()
             alarm.enableTorch = false
             alarm.lightOnly = false
-            alarm.sunriseMinutes = 0
             return
         }
 
@@ -296,44 +294,9 @@ class EditAlarmDialog(
             }
         }
 
-        binding.editAlarmSunriseIcon.setColorFilter(textColor)
-        updateSunriseLabel()
-        binding.editAlarmSunriseHolder.setOnClickListener {
-            showSunrisePicker()
-        }
     }
 
-    private fun showSunrisePicker() {
-        val sunriseOptions = listOf(0, 1, 5, 10, 20, 30)
-        val labels = sunriseOptions.map { minutes ->
-            if (minutes == 0) {
-                activity.getString(R.string.sunrise_fade_off)
-            } else {
-                activity.getString(R.string.sunrise_fade_minutes, minutes)
-            }
-        }
 
-        activity.getAlertDialogBuilder()
-            .setTitle(R.string.sunrise_fade_in)
-            .setSingleChoiceItems(
-                labels.toTypedArray(),
-                sunriseOptions.indexOf(alarm.sunriseMinutes).coerceAtLeast(0)
-            ) { dialog, which ->
-                alarm.sunriseMinutes = sunriseOptions[which]
-                updateSunriseLabel()
-                dialog?.dismiss()
-            }
-            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
-            .show()
-    }
-
-    private fun updateSunriseLabel() {
-        binding.editAlarmSunriseLabel.text = if (alarm.sunriseMinutes > 0) {
-            activity.getString(R.string.sunrise_fade_minutes, alarm.sunriseMinutes)
-        } else {
-            activity.getString(R.string.sunrise_fade_off)
-        }
-    }
 
     private fun restoreLastAlarm() {
         if (alarm.id == 0) {
@@ -346,7 +309,6 @@ class EditAlarmDialog(
                 alarm.vibrate = lastConfig.vibrate
                 alarm.enableTorch = lastConfig.enableTorch
                 alarm.lightOnly = lastConfig.lightOnly
-                alarm.sunriseMinutes = lastConfig.sunriseMinutes
             }
         }
     }

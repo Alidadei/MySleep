@@ -151,7 +151,6 @@ class DBHelper private constructor(
             put(COL_ONE_SHOT, alarm.oneShot)
             put(COL_ENABLE_TORCH, alarm.enableTorch)
             put(COL_LIGHT_ONLY, alarm.lightOnly)
-            put(COL_SUNRISE_MINUTES, alarm.sunriseMinutes)
         }
     }
 
@@ -171,7 +170,6 @@ class DBHelper private constructor(
             COL_ONE_SHOT,
             COL_ENABLE_TORCH,
             COL_LIGHT_ONLY,
-            COL_SUNRISE_MINUTES
         )
         var cursor: Cursor? = null
         try {
@@ -190,7 +188,6 @@ class DBHelper private constructor(
                         val oneShot = cursor.getIntValue(COL_ONE_SHOT) == 1
                         val enableTorch = cursor.getIntValue(COL_ENABLE_TORCH) == 1
                         val lightOnly = cursor.getIntValue(COL_LIGHT_ONLY) == 1
-                        val sunriseMinutes = cursor.getIntValue(COL_SUNRISE_MINUTES)
 
                         val alarm = Alarm(
                             id = id,
@@ -204,7 +201,6 @@ class DBHelper private constructor(
                             oneShot = oneShot,
                             enableTorch = enableTorch,
                             lightOnly = lightOnly,
-                            sunriseMinutes = sunriseMinutes
                         )
                         alarms.add(alarm)
                     } catch (e: Exception) {

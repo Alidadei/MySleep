@@ -11,7 +11,6 @@ import org.fossify.clock.extensions.updateWidgets
 import org.fossify.clock.models.Alarm
 import org.fossify.clock.models.AlarmEvent
 import org.fossify.clock.services.AlarmService
-import org.fossify.clock.services.SunriseService
 import org.fossify.commons.extensions.removeBit
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.helpers.ensureBackgroundThread
@@ -101,9 +100,6 @@ class AlarmController(
      * @param alarmId The ID of the alarm that was triggered.
      */
     fun onAlarmTriggered(alarmId: Int) {
-        // the sunrise fade-in is done, hand the light over to the ringing alarm
-        context.stopService(Intent(context, SunriseService::class.java))
-
         ensureBackgroundThread {
             // Reschedule the next occurrence right away
             val alarm = db.getAlarmWithId(alarmId) ?: return@ensureBackgroundThread

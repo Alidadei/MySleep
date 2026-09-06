@@ -37,6 +37,7 @@ class AlarmService : Service() {
         private const val MIN_ALARM_VOLUME_FOR_INCREASING_ALARMS = 1
         private const val VIBRATION_PATTERN_TIMING = 500L
         private const val VOLUME_INCREASE_STEP = 0.1f
+        private const val TORCH_ASSERT_INTERVAL_MS = 2000L
 
         const val ACTION_START_ALARM = "org.fossify.clock.START_ALARM"
         const val ACTION_STOP_ALARM = "org.fossify.clock.STOP_ALARM"
@@ -52,6 +53,7 @@ class AlarmService : Service() {
 
     private val autoDismissHandler = Handler(Looper.getMainLooper())
     private val increaseVolumeHandler = Handler(Looper.getMainLooper())
+    private val torchAssertHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
@@ -117,7 +119,7 @@ class AlarmService : Service() {
     private fun startAlarmEffects(alarm: Alarm) {
         // light wake-up: turn the flashlight on for the whole ring, even in silent mode
         if (alarm.usesLightWake()) {
-            TorchHelper.setTorch(this, true)
+            startTorchWithRetry()
         }
 
         if (alarm.lightOnly) {
@@ -156,12 +158,44 @@ class AlarmService : Service() {
         }
 
         if (alarm.vibrate) {
-            vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+            startVibration()
+        }
+    }
+
+    /**
+     * The flash unit can be momentarily unavailable (camera in use, system
+     * toggling), so keep asserting the torch while the alarm rings.
+     */
+    private fun startTorchWithRetry() {
+        torchAssertHandler.removeCallbacksAndMessages(null)
+        val assertRunnable = object : Runnable {
+            override fun run() {
+                TorchHelper.setTorch(this@AlarmService, true)
+                torchAssertHandler.postDelayed(this, TORCH_ASSERT_INTERVAL_MS)
+            }
+        }
+        TorchHelper.setTorch(this, true)
+        torchAssertHandler.postDelayed(assertRunnable, TORCH_ASSERT_INTERVAL_MS)
+    }
+
+    /** Vibration via VibratorManager on 12+, legacy service below - never fatal. */
+    private fun startVibration() {
+        try {
+            val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
+                val manager = getSystemService(VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                manager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
+            }
+
             vibrator?.vibrate(
                 VibrationEffect.createWaveform(
-                    longArrayOf(VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
+                    longArrayOf(0, VIBRATION_PATTERN_TIMING, VIBRATION_PATTERN_TIMING), 0
                 )
             )
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -206,6 +240,7 @@ class AlarmService : Service() {
         // Clear any scheduled volume changes or auto-dismiss messages
         increaseVolumeHandler.removeCallbacksAndMessages(null)
         autoDismissHandler.removeCallbacksAndMessages(null)
+        torchAssertHandler.removeCallbacksAndMessages(null)
         resetVolumeToInitialValue()
     }
 
