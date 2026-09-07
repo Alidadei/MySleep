@@ -16,12 +16,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.google.android.material.chip.Chip
 import org.fossify.clock.R
+import org.fossify.clock.activities.NightTalkActivity
 import org.fossify.clock.activities.SleepReportActivity
 import org.fossify.clock.databinding.FragmentRelaxBinding
 import org.fossify.clock.extensions.dbHelper
 import org.fossify.clock.extensions.requiredActivity
+import org.fossify.clock.helpers.AdGuard
 import org.fossify.clock.helpers.CommunityPick
+import org.fossify.clock.helpers.InsomniaTypes
 import org.fossify.clock.helpers.PicksRepository
 import org.fossify.clock.helpers.RelaxItem
 import org.fossify.clock.helpers.RelaxStore
@@ -46,6 +50,8 @@ class RelaxFragment : Fragment() {
 
     private lateinit var binding: FragmentRelaxBinding
     private var currentSection = Section.FAVORITES
+    private var selectedType = InsomniaTypes.KEY_ALL
+    private var chipsBuilt = false
 
     private val filePicker =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -77,11 +83,15 @@ class RelaxFragment : Fragment() {
         binding.cardFavoritesIcon.applyColorFilter(accent)
         binding.cardPicksIcon.applyColorFilter(accent)
         binding.cardReportIcon.applyColorFilter(accent)
+        binding.cardNightTalkIcon.applyColorFilter(accent)
 
         binding.cardFavorites.setOnClickListener { showSection(Section.FAVORITES) }
         binding.cardPicks.setOnClickListener { showSection(Section.PICKS) }
         binding.cardReport.setOnClickListener {
             startActivity(Intent(requireContext(), SleepReportActivity::class.java))
+        }
+        binding.cardNightTalk.setOnClickListener {
+            startActivity(Intent(requireContext(), NightTalkActivity::class.java))
         }
 
         binding.relaxBack.setOnClickListener { showHub() }
@@ -115,18 +125,50 @@ class RelaxFragment : Fragment() {
         binding.relaxSectionTitle.setText(
             if (section == Section.FAVORITES) R.string.relax_custom_label else R.string.relax_picks_label
         )
+        binding.relaxTypeChipsScroll.beVisibleIf(section == Section.PICKS)
+        if (section == Section.PICKS && !chipsBuilt) {
+            buildTypeChips()
+        }
         populateSection(section)
+    }
+
+    private fun buildTypeChips() {
+        chipsBuilt = true
+        val group = binding.relaxTypeChips
+        val entries = mutableListOf(InsomniaTypes.KEY_ALL)
+        entries.addAll(InsomniaTypes.types.map { it.key })
+
+        entries.forEachIndexed { index, key ->
+            val chip = LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_type_chip, group, false) as Chip
+            chip.text = if (key == InsomniaTypes.KEY_ALL) {
+                getString(R.string.insomnia_all)
+            } else {
+                InsomniaTypes.labelKey(requireContext(), key)
+            }
+            chip.isChecked = key == selectedType
+            chip.setOnCheckedChangeListener { _, checked ->
+                if (checked) {
+                    selectedType = key
+                    populateSection(Section.PICKS)
+                }
+            }
+            group.addView(chip)
+        }
     }
 
     private fun populateSection(section: Section) {
         binding.relaxHolder.removeAllViews()
 
         if (section == Section.PICKS) {
-            PicksRepository.getPicks(requireContext()).forEach { item ->
-                addItemRow(item, deletable = false)
-            }
+            PicksRepository.getPicks(requireContext())
+                .filter { selectedType == InsomniaTypes.KEY_ALL || it.type == selectedType }
+                .forEach { item ->
+                    addItemRow(item, deletable = false)
+                }
             addSectionLabel(getString(R.string.community_label))
             val communityPicks = RelaxStore.getCommunityPicks(requireContext())
+                .filter { selectedType == InsomniaTypes.KEY_ALL || it.type == selectedType }
                 .sortedWith(
                     compareByDescending<CommunityPick> { it.ratings?.average() ?: 0.0 }
                         .thenByDescending { it.ratings?.size ?: 0 }
@@ -234,11 +276,19 @@ class RelaxFragment : Fragment() {
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
             .text = pick.title
         val ratings = pick.ratings
+        val typeLabel = InsomniaTypes.labelKey(requireContext(), pick.type)
+        val typePrefix = typeLabel.ifEmpty { "" }
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .text = if (!ratings.isNullOrEmpty()) {
-                getString(R.string.community_rating_fmt, ratings.average(), ratings.size)
-            } else {
-                pick.url
+            .text = when {
+                !ratings.isNullOrEmpty() -> {
+                    val ratingText =
+                        getString(R.string.community_rating_fmt, ratings.average(), ratings.size)
+                    if (typePrefix.isEmpty()) ratingText else "[$typePrefix] $ratingText"
+                }
+
+                typePrefix.isNotEmpty() -> "[$typePrefix] ${pick.url}"
+
+                else -> pick.url
             }
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }
@@ -284,8 +334,17 @@ class RelaxFragment : Fragment() {
         holder.addView(titleInput)
         holder.addView(urlInput)
 
+        val typeLabels = InsomniaTypes.types.map { getString(it.labelRes) }.toTypedArray()
+        val profileTypeIndex = InsomniaTypes.types.indexOfFirst {
+            it.key == org.fossify.clock.helpers.NightTalk.getProfile(requireContext()).insomniaType
+        }
+        var selectedType = if (profileTypeIndex >= 0) profileTypeIndex else -1
+
         val dialog = requireActivity().getAlertDialogBuilder()
             .setTitle(R.string.recommend_add)
+            .setSingleChoiceItems(typeLabels, selectedType) { _, which ->
+                selectedType = which
+            }
             .setPositiveButton(org.fossify.commons.R.string.ok, null)
             .setNegativeButton(org.fossify.commons.R.string.cancel, null)
             .create()
@@ -307,13 +366,30 @@ class RelaxFragment : Fragment() {
             urlInput.addTextChangedListener(inputWatcher)
 
             okButton.setOnClickListener {
-                RelaxStore.addCommunityPick(
-                    requireContext(),
-                    titleInput.text.toString().trim(),
-                    RelaxStore.normalizeUrl(urlInput.text.toString())
-                )
-                dialog.dismiss()
-                populateSection(Section.PICKS)
+                val title = titleInput.text.toString().trim()
+                val url = RelaxStore.normalizeUrl(urlInput.text.toString())
+                when (val verdict = AdGuard.check(title, url)) {
+                    is AdGuard.Verdict.Blocked -> {
+                        requireContext().toast(
+                            getString(R.string.ad_blocked_toast, verdict.reason)
+                        )
+                    }
+
+                    AdGuard.Verdict.Ok -> {
+                        RelaxStore.addCommunityPick(
+                            requireContext(),
+                            title,
+                            url,
+                            type = if (selectedType >= 0) {
+                                InsomniaTypes.types[selectedType].key
+                            } else {
+                                null
+                            }
+                        )
+                        dialog.dismiss()
+                        populateSection(Section.PICKS)
+                    }
+                }
             }
         }
 

@@ -4,4 +4,10 @@
     <color name="color_primary">#414A94</color>
     <color name="color_primary_dark">#2B3161</color>
     <color name="color_accent">#E7C97F</color>
+
+    <!-- 夜间模式：文字翻白，卡片底稍亮以保证对比度 -->
+    <color name="relax_text_primary">#DEFFFFFF</color>
+    <color name="relax_text_secondary">#99FFFFFF</color>
+    <color name="relax_card_bg">#1F4E57A5</color>
+    <color name="relax_card_stroke">#4D4E57A5</color>
 </resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 承天寺山门：双层飞檐 + 柱 + 台基剪影 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,1.2 C10.2,2.6 6.4,4.1 2.2,4.7 L2.2,6 C6.4,5.6 10,4.5 12,3.1 C14,4.5 17.6,5.6 21.8,6 L21.8,4.7 C17.6,4.1 13.8,2.6 12,1.2 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,4.6 C10.6,5.7 7.6,6.9 4.4,7.4 L4.4,8.5 C7.6,8.2 10.4,7.3 12,6.2 C13.6,7.3 16.4,8.2 19.6,8.5 L19.6,7.4 C16.4,6.9 13.4,5.7 12,4.6 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6.6,9.6 h1.5 v7.4 h-1.5 z M15.9,9.6 h1.5 v7.4 h-1.5 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4.2,17.6 h15.6 v1.6 h-15.6 z M2.6,20 h18.8 v1.4 h-18.8 z" />
+</vector>

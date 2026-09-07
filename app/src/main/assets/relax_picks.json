@@ -1,22 +1,67 @@
 [
   {
-    "title": "myNoise · 自然声景",
-    "url": "https://mynoise.net/"
+    "title": "呼吸放松 4-7-8 · 焦虑平复引导",
+    "url": "https://www.youtube.com/results?search_query=4-7-8+breathing+relaxation",
+    "type": "anxiety"
   },
   {
-    "title": "Noisli · 雨声白噪音混合",
-    "url": "https://www.noisli.com/"
+    "title": "正念身体扫描 · 十分钟卸下紧绷",
+    "url": "https://www.youtube.com/results?search_query=body+scan+meditation+10+minutes",
+    "type": "anxiety"
   },
   {
-    "title": "LibriVox · 中文公版有声书",
-    "url": "https://librivox.org/search?primary_key_language=chinese"
+    "title": "白噪音 · 雨打窗台 8 小时",
+    "url": "https://www.youtube.com/results?search_query=rain+sounds+for+sleeping+8+hours",
+    "type": "anxiety"
   },
   {
-    "title": "雨声助眠 · 视频搜索",
-    "url": "https://www.youtube.com/results?search_query=rain+sounds+for+sleeping+8+hours"
+    "title": "脑中过电影停不下来？认知洗牌法",
+    "url": "https://www.youtube.com/results?search_query=cognitive+shuffle+sleep",
+    "type": "excitement"
+  },
+  {
+    "title": "枯燥读 · 英文公版有声书",
+    "url": "https://librivox.org/",
+    "type": "excitement"
   },
   {
     "title": "睡前故事 · 视频搜索",
-    "url": "https://www.youtube.com/results?search_query=%E7%9D%A1%E5%89%8D%E6%95%85%E4%BA%8B"
+    "url": "https://www.youtube.com/results?search_query=%E7%9D%A1%E5%89%8D%E6%95%85%E4%BA%8B",
+    "type": "excitement"
+  },
+  {
+    "title": "渐进式肌肉放松 · 从脚到眉",
+    "url": "https://www.youtube.com/results?search_query=progressive+muscle+relaxation+sleep",
+    "type": "physical"
+  },
+  {
+    "title": "睡前拉伸 · 八分钟松开腰背",
+    "url": "https://www.youtube.com/results?search_query=bedtime+stretching+8+minutes",
+    "type": "physical"
+  },
+  {
+    "title": "胃不和则卧不安 · 睡前两小时别吃这些",
+    "url": "https://www.youtube.com/results?search_query=%E7%9D%A1%E5%89%8D%E9%A5%AE%E9%A3%9F",
+    "type": "physical"
+  },
+  {
+    "title": "myNoise · 自然声景遮蔽环境噪音",
+    "url": "https://mynoise.net/",
+    "type": "noise"
+  },
+  {
+    "title": "Noisli · 自配雨声/风声混合",
+    "url": "https://www.noisli.com/",
+    "type": "noise"
+  },
+  {
+    "title": "粉红噪音 · 比白噪音更柔的遮蔽层",
+    "url": "https://www.youtube.com/results?search_query=pink+noise+sleep+8+hours",
+    "type": "noise"
+  },
+  {
+    "title": "LibriVox · 中文公版有声书",
+    "url": "https://librivox.org/search?primary_key_language=chinese",
+    "type": "excitement"
   }
 ]

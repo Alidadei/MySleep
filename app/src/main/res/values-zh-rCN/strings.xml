@@ -122,4 +122,33 @@
     <string name="relax_delete_confirm">删除这条收藏？</string>
     <string name="relax_remove">删除</string>
     <string name="relax_invalid_url">网址无效，或没有可打开它的应用</string>
+
+    <!-- 失眠类型 -->
+    <string name="insomnia_all">全部</string>
+    <string name="insomnia_anxiety">焦虑型</string>
+    <string name="insomnia_anxiety_desc">思绪停不下来、越想越清醒</string>
+    <string name="insomnia_excitement">兴奋型</string>
+    <string name="insomnia_excitement_desc">大脑过电影、白天的事反复回放</string>
+    <string name="insomnia_physical">生理型</string>
+    <string name="insomnia_physical_desc">腰酸背痛、腿不安、肠胃不适</string>
+    <string name="insomnia_noise">噪音干扰型</string>
+    <string name="insomnia_noise_desc">车声、邻居、室友动静</string>
+    <string name="ad_blocked_toast">未发布：%s</string>
+
+    <!-- 寻找张怀民 -->
+    <string name="night_talk_title">寻找张怀民</string>
+    <string name="night_talk_subtitle">怀民亦未寝 · 给还醒着的人</string>
+    <string name="night_talk_hour_fmt">夜至%s</string>
+    <string name="night_talk_daily_label">今日夜话</string>
+    <string name="night_talk_profile_label">睡眠画像</string>
+    <string name="night_talk_type_unset">类型未定</string>
+    <string name="night_talk_edit_profile">编辑画像</string>
+    <string name="night_talk_nickname_hint">昵称</string>
+    <string name="night_talk_birth_hint">生辰（YYYY-MM-DD，选填）</string>
+    <string name="night_talk_notes_label">随记树洞（仅存本机，不会上传）</string>
+    <string name="night_talk_notes_empty">还没写过。今晚也可以写一笔。</string>
+    <string name="night_talk_add_note">写一笔</string>
+    <string name="night_talk_note_hint">今晚是什么让你睡不着？</string>
+    <string name="night_talk_note_delete_confirm">删除这条随记？</string>
+    <string name="night_talk_matching_hint">与同类型未眠人的匹配将在社区云端上线——随记默认私密，只有你选择分享才会被看见。</string>
 </resources>

@@ -4,4 +4,10 @@
     <color name="color_primary">#4E57A5</color>
     <color name="color_primary_dark">#333A6E</color>
     <color name="color_accent">#E7C97F</color>
+
+    <!-- 助眠卡片文字：日间深灰（用户手机为浅色模式），夜间翻白 -->
+    <color name="relax_text_primary">#DE333333</color>
+    <color name="relax_text_secondary">#99333333</color>
+    <color name="relax_card_bg">#0F4E57A5</color>
+    <color name="relax_card_stroke">#2E4E57A5</color>
 </resources>

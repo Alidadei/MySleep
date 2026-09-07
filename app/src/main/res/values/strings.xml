@@ -129,6 +129,35 @@
     <string name="relax_remove">Remove</string>
     <string name="relax_invalid_url">Invalid URL or no app to open it</string>
 
+    <!-- Insomnia types -->
+    <string name="insomnia_all">All</string>
+    <string name="insomnia_anxiety">Anxious mind</string>
+    <string name="insomnia_anxiety_desc">Racing worries, hard to switch off</string>
+    <string name="insomnia_excitement">Excited mind</string>
+    <string name="insomnia_excitement_desc">Buzzing thoughts, replaying the day</string>
+    <string name="insomnia_physical">Body discomfort</string>
+    <string name="insomnia_physical_desc">Aching, restless legs, digestion</string>
+    <string name="insomnia_noise">Noise disturbance</string>
+    <string name="insomnia_noise_desc">Traffic, neighbors, roommates</string>
+    <string name="ad_blocked_toast">Not posted: %s</string>
+
+    <!-- Night talk (寻找张怀民) -->
+    <string name="night_talk_title">Find Zhang Huaimin</string>
+    <string name="night_talk_subtitle">For those still awake · 怀民亦未寝</string>
+    <string name="night_talk_hour_fmt">It is %s</string>
+    <string name="night_talk_daily_label">Tonight\'s line</string>
+    <string name="night_talk_profile_label">Sleep profile</string>
+    <string name="night_talk_type_unset">type unknown</string>
+    <string name="night_talk_edit_profile">Edit profile</string>
+    <string name="night_talk_nickname_hint">Nickname</string>
+    <string name="night_talk_birth_hint">Birth date (YYYY-MM-DD, optional)</string>
+    <string name="night_talk_notes_label">Night journal (private, stays on this phone)</string>
+    <string name="night_talk_notes_empty">Nothing written yet. Tonight counts too.</string>
+    <string name="night_talk_add_note">Write a line</string>
+    <string name="night_talk_note_hint">What is keeping you up?</string>
+    <string name="night_talk_note_delete_confirm">Delete this note?</string>
+    <string name="night_talk_matching_hint">Matching with other awake souls arrives with the community cloud — your journal stays private until you share it.</string>
+
     <!-- FAQ -->
     <!--
         Haven't found some strings? There's more at

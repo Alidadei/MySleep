@@ -22,6 +22,7 @@ data class CommunityPick(
     val url: String,
     var ratings: MutableList<Int>? = null,
     var addedAt: Long = 0,
+    var type: String? = null,
 )
 data class RelaxItem(
     val id: Long,
@@ -29,6 +30,7 @@ data class RelaxItem(
     val url: String,
     val isCustom: Boolean = false,
     val isLocal: Boolean = false,
+    val type: String? = null,
 )
 
 object RelaxStore {
@@ -133,7 +135,7 @@ object RelaxStore {
         }
     }
 
-    fun addCommunityPick(context: Context, title: String, url: String) {
+    fun addCommunityPick(context: Context, title: String, url: String, type: String? = null) {
         val picks = getCommunityPicks(context)
         picks.add(
             CommunityPick(
@@ -141,7 +143,8 @@ object RelaxStore {
                 title = title,
                 url = url,
                 ratings = mutableListOf(),
-                addedAt = System.currentTimeMillis()
+                addedAt = System.currentTimeMillis(),
+                type = type
             )
         )
         saveCommunityPicks(context, picks)

@@ -141,6 +141,13 @@
             android:label="@string/sleep_report"
             android:parentActivityName=".activities.MainActivity" />
 
+        <activity
+            android:name=".activities.NightTalkActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/night_talk_title"
+            android:parentActivityName=".activities.MainActivity" />
+
 
         <activity
             android:name=".activities.WidgetDigitalConfigureActivity"

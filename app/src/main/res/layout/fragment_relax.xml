@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- hub: three entry cards -->
+    <!-- hub: entry cards -->
     <ScrollView
         android:id="@+id/relax_hub"
         android:layout_width="match_parent"
@@ -46,14 +46,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/relax_custom_label"
-                        android:textColor="#DE333333"
+                        android:textColor="@color/relax_text_primary"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#99333333"
+                        android:textColor="@color/relax_text_secondary"
                         android:text="@string/hub_favorites_subtitle"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
@@ -87,14 +87,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/relax_picks_label"
-                        android:textColor="#DE333333"
+                        android:textColor="@color/relax_text_primary"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#99333333"
+                        android:textColor="@color/relax_text_secondary"
                         android:text="@string/hub_picks_subtitle"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
@@ -128,7 +128,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/sleep_report"
-                        android:textColor="#DE333333"
+                        android:textColor="@color/relax_text_primary"
                         android:textSize="@dimen/bigger_text_size" />
 
                     <org.fossify.commons.views.MyTextView
@@ -136,8 +136,49 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="#99333333"
+                        android:textColor="@color/relax_text_secondary"
                         android:text="@string/report_subtitle_empty"
+                        android:textSize="@dimen/smaller_text_size" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/card_night_talk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_rounded"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="18dp">
+
+                <ImageView
+                    android:id="@+id/card_night_talk_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_temple_vector" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <org.fossify.commons.views.MyTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/night_talk_title"
+                        android:textColor="@color/relax_text_primary"
+                        android:textSize="@dimen/bigger_text_size" />
+
+                    <org.fossify.commons.views.MyTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/relax_text_secondary"
+                        android:text="@string/night_talk_subtitle"
                         android:textSize="@dimen/smaller_text_size" />
                 </LinearLayout>
             </LinearLayout>
@@ -183,9 +224,26 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:textColor="#DE333333"
+                    android:textColor="@color/relax_text_primary"
                     android:textSize="@dimen/bigger_text_size" />
             </LinearLayout>
+
+            <HorizontalScrollView
+                android:id="@+id/relax_type_chips_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:scrollbars="none"
+                android:visibility="gone"
+                xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/relax_type_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true" />
+            </HorizontalScrollView>
 
             <LinearLayout
                 android:id="@+id/relax_holder"
