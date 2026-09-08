@@ -128,6 +128,16 @@
     <string name="relax_delete_confirm">Remove this favorite?</string>
     <string name="relax_remove">Remove</string>
     <string name="relax_invalid_url">Invalid URL or no app to open it</string>
+    <string name="relax_paste_hint">Paste a link or a whole share text (Bilibili share works)</string>
+    <string name="relax_title_optional_hint">Title (leave empty to fetch automatically)</string>
+    <string name="relax_unnamed_fmt">Untitled · %s</string>
+
+    <!-- About -->
+    <string name="about_tagline">Light wake-up · Bedtime relax · Late-night company</string>
+    <string name="about_description">A quiet light alarm and bedtime companion: woken gently by flashlight light, relax with curated sleep content, and late at night, look for Zhang Huaimin — the other souls still awake.</string>
+    <string name="about_project_link">Project home · GitHub</string>
+    <string name="about_upstream_credit">Based on the open-source Fossify Clock (GPL-3.0)</string>
+    <string name="about_privacy_note">All your data stays on this phone only</string>
 
     <!-- Insomnia types -->
     <string name="insomnia_all">All</string>

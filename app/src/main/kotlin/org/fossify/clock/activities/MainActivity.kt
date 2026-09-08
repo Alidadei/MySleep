@@ -483,46 +483,24 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun launchAbout() {
-        val licenses =
-            LICENSE_NUMBER_PICKER or LICENSE_RTL or LICENSE_AUTOFITTEXTVIEW
+        val view = layoutInflater.inflate(R.layout.dialog_about, null)
+        view.findViewById<android.widget.TextView>(R.id.about_version).text =
+            "v${BuildConfig.VERSION_NAME}"
 
-        val faqItems = arrayListOf(
-            FAQItem(
-                title = org.fossify.commons.R.string.faq_1_title_commons,
-                text = org.fossify.commons.R.string.faq_1_text_commons
-            ),
-            FAQItem(
-                title = org.fossify.commons.R.string.faq_4_title_commons,
-                text = org.fossify.commons.R.string.faq_4_text_commons
-            ),
-            FAQItem(
-                title = org.fossify.commons.R.string.faq_9_title_commons,
-                text = org.fossify.commons.R.string.faq_9_text_commons
-            )
-        )
-
-        if (!resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)) {
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_2_title_commons,
-                    text = org.fossify.commons.R.string.faq_2_text_commons
+        view.findViewById<android.widget.TextView>(R.id.about_project_link).setOnClickListener {
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Alidadei/MySleep"))
                 )
-            )
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_6_title_commons,
-                    text = org.fossify.commons.R.string.faq_6_text_commons
-                )
-            )
+            } catch (e: Exception) {
+            }
         }
 
-        startAboutActivity(
-            appNameId = R.string.app_name,
-            licenseMask = licenses,
-            versionName = BuildConfig.VERSION_NAME,
-            faqItems = faqItems,
-            showFAQBeforeMail = true
-        )
+        getAlertDialogBuilder()
+            .setTitle(org.fossify.commons.R.string.about)
+            .setView(view)
+            .setPositiveButton(org.fossify.commons.R.string.ok, null)
+            .show()
     }
 
     @Deprecated("Remove this method in future releases")

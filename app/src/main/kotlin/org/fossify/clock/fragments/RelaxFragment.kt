@@ -468,15 +468,64 @@ class RelaxFragment : Fragment() {
             )
         }
 
+        val pasteInput = EditText(requireContext()).apply {
+            hint = getString(R.string.relax_paste_hint)
+            maxLines = 4
+        }
         val titleInput = EditText(requireContext()).apply {
-            hint = getString(R.string.relax_title_hint)
+            hint = getString(R.string.relax_title_optional_hint)
         }
         val urlInput = EditText(requireContext()).apply {
             hint = getString(R.string.relax_url_hint)
         }
 
+        holder.addView(pasteInput)
         holder.addView(titleInput)
         holder.addView(urlInput)
+
+        var userEditedTitle = false
+        var fetchedTitle: String? = null
+        val parseDebounce = android.os.Handler(android.os.Looper.getMainLooper())
+
+        fun applyParsed(text: String) {
+            val parsed = org.fossify.clock.helpers.LinkParser.parse(text)
+            parsed.url?.let { urlInput.setText(it) }
+            val shareTitle = parsed.title
+            if (!shareTitle.isNullOrBlank() && !userEditedTitle) {
+                titleInput.setText(shareTitle)
+            } else if (shareTitle.isNullOrBlank()) {
+                fetchedTitle = null
+                val url = parsed.url ?: return
+                org.fossify.clock.helpers.LinkParser.fetchTitleAsync(url) { remote ->
+                    if (remote != null && !userEditedTitle) {
+                        fetchedTitle = remote
+                        if (titleInput.text.isNullOrBlank()) {
+                            titleInput.setText(remote)
+                        }
+                    }
+                }
+            }
+        }
+
+        pasteInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                parseDebounce.removeCallbacksAndMessages(null)
+                if (!s.isNullOrBlank()) {
+                    parseDebounce.postDelayed({ applyParsed(s.toString()) }, 400)
+                }
+            }
+
+            override fun beforeTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+            override fun onTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+        })
+        titleInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                userEditedTitle = true
+            }
+
+            override fun beforeTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+            override fun onTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+        })
 
         val dialog = requireActivity().getAlertDialogBuilder()
             .setTitle(R.string.relax_add_favorite)
@@ -490,22 +539,27 @@ class RelaxFragment : Fragment() {
 
             val inputWatcher = object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    okButton.isEnabled = titleInput.text.isNotBlank() &&
-                        RelaxStore.isValidUrl(urlInput.text.toString())
+                    okButton.isEnabled = RelaxStore.isValidUrl(urlInput.text.toString())
                 }
 
                 override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
             }
-            titleInput.addTextChangedListener(inputWatcher)
             urlInput.addTextChangedListener(inputWatcher)
 
             okButton.setOnClickListener {
-                RelaxStore.addCustomItem(
-                    requireContext(),
-                    titleInput.text.toString().trim(),
-                    RelaxStore.normalizeUrl(urlInput.text.toString())
-                )
+                val url = RelaxStore.normalizeUrl(urlInput.text.toString())
+                if (!RelaxStore.isValidUrl(url)) {
+                    return@setOnClickListener
+                }
+                val host = try {
+                    url.toUri().host ?: ""
+                } catch (e: Exception) {
+                    ""
+                }
+                val title = titleInput.text.toString().trim()
+                    .ifEmpty { fetchedTitle ?: getString(R.string.relax_unnamed_fmt, host) }
+                RelaxStore.addCustomItem(requireContext(), title, url)
                 dialog.dismiss()
                 populateSection(Section.FAVORITES)
             }

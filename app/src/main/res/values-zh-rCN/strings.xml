@@ -122,6 +122,16 @@
     <string name="relax_delete_confirm">删除这条收藏？</string>
     <string name="relax_remove">删除</string>
     <string name="relax_invalid_url">网址无效，或没有可打开它的应用</string>
+    <string name="relax_paste_hint">粘贴链接或整段分享文本（支持B站分享格式）</string>
+    <string name="relax_title_optional_hint">标题（留空自动获取）</string>
+    <string name="relax_unnamed_fmt">未命名 · %s</string>
+
+    <!-- 关于 -->
+    <string name="about_tagline">光唤醒 · 睡前助眠 · 深夜陪伴</string>
+    <string name="about_description">一款安静的光闹钟与睡前伴侣：到点用手电筒光轻柔唤醒你；睡前收藏助眠内容、按失眠类型对症推荐；深夜还能去承天寺，寻找同样未睡的张怀民。</string>
+    <string name="about_project_link">项目主页 · GitHub</string>
+    <string name="about_upstream_credit">基于开源项目 Fossify Clock（GPL-3.0）二次开发</string>
+    <string name="about_privacy_note">你的全部数据只保存在这台手机上</string>
 
     <!-- 失眠类型 -->
     <string name="insomnia_all">全部</string>
