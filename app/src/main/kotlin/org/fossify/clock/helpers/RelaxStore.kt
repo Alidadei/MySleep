@@ -32,7 +32,10 @@ data class RelaxItem(
     val isLocal: Boolean = false,
     val type: String? = null,
     val sample: Boolean = false,
-    val sampleRating: String? = null,
+    /** Sample rating placeholder until real user ratings land; rendered with
+     *  community_rating_fmt so it localizes ("★ 4.7 · 215 ratings" / "次评价"). */
+    val sampleRatingAvg: Double? = null,
+    val sampleRatingCount: Int? = null,
 )
 
 object RelaxStore {

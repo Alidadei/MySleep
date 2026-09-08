@@ -35,9 +35,14 @@ object AdGuard {
         Regex("""(?i)(t\.cn|bit\.ly|dwz\.cn|url\.cn|suo\.im|tinyurl)/\S+""")
     )
 
+    /** Verdict reason codes - the caller renders them with localized strings. */
+    const val REASON_CONTACT = "contact"
+    const val REASON_STRONG = "strong"
+    const val REASON_WEAK = "weak"
+
     sealed class Verdict {
         object Ok : Verdict()
-        data class Blocked(val reason: String) : Verdict()
+        data class Blocked(val code: String, val detail: String) : Verdict()
     }
 
     fun check(vararg texts: String?): Verdict {
@@ -46,17 +51,17 @@ object AdGuard {
 
         contactPatterns.forEach { pattern ->
             pattern.find(lower)?.let {
-                return Verdict.Blocked("疑似联系方式/短链：${it.value.take(24)}")
+                return Verdict.Blocked(REASON_CONTACT, it.value.take(24))
             }
         }
 
         strongKeywords.firstOrNull { lower.contains(it.lowercase()) }?.let {
-            return Verdict.Blocked("疑似推广关键词：$it")
+            return Verdict.Blocked(REASON_STRONG, it)
         }
 
         val weakHits = weakKeywords.count { lower.contains(it.lowercase()) }
         if (weakHits >= 2) {
-            return Verdict.Blocked("广告特征过多（命中 $weakHits 项）")
+            return Verdict.Blocked(REASON_WEAK, weakHits.toString())
         }
 
         return Verdict.Ok

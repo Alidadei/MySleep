@@ -16,6 +16,7 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
+import org.fossify.clock.R
 import org.fossify.clock.extensions.alarmController
 import org.fossify.clock.extensions.hideNotification
 import org.fossify.commons.helpers.isOreoPlus
@@ -76,8 +77,8 @@ object RingOverlayHelper {
         show(
             context,
             title = label,
-            subtitle = timeText.ifEmpty { "闹钟响铃中" },
-            hint = "响铃页被系统拦截，这是兜底界面。建议：设置 → 一键开启所需权限，开启“后台弹出界面”和“锁屏显示”",
+            subtitle = timeText.ifEmpty { context.getString(R.string.ring_overlay_alarm_subtitle) },
+            hint = context.getString(R.string.ring_overlay_hint),
             showSnooze = true,
             onStop = {
                 try {
@@ -102,8 +103,8 @@ object RingOverlayHelper {
         show(
             context,
             title = label?.ifEmpty { null } ?: context.getString(org.fossify.clock.R.string.timer),
-            subtitle = "计时结束",
-            hint = "响铃页被系统拦截，这是兜底界面。建议：设置 → 一键开启所需权限，开启“后台弹出界面”和“锁屏显示”",
+            subtitle = context.getString(R.string.ring_overlay_timer_subtitle),
+            hint = context.getString(R.string.ring_overlay_hint),
             showSnooze = false,
             onStop = {
                 try {
@@ -268,9 +269,9 @@ object RingOverlayHelper {
                 }
                 val guideView = TextView(context).apply {
                     text = if (showSnooze && onSnooze != null) {
-                        "右滑关闭 · 左滑贪睡 $OVERLAY_SNOOZE_MINUTES 分钟"
+                        context.getString(R.string.ring_overlay_guide_both, OVERLAY_SNOOZE_MINUTES)
                     } else {
-                        "右滑关闭"
+                        context.getString(R.string.ring_overlay_guide_dismiss)
                     }
                     setTextColor(0xCCFFFFFF.toInt())
                     textSize = 14f
@@ -279,7 +280,7 @@ object RingOverlayHelper {
                 }
 
                 val stopButton = TextView(context).apply {
-                    text = "停止"
+                    text = context.getString(R.string.ring_overlay_stop)
                     setTextColor(0xFF241E0E.toInt())
                     textSize = 18f
                     typeface = Typeface.DEFAULT_BOLD
@@ -307,7 +308,7 @@ object RingOverlayHelper {
                 if (showSnooze && onSnooze != null) {
                     root.addView(Space(context).apply { layoutParams = LinearLayout.LayoutParams(0, dp(18)) })
                     val snoozeButton = TextView(context).apply {
-                        text = "贪睡 $OVERLAY_SNOOZE_MINUTES 分钟"
+                        text = context.getString(R.string.ring_overlay_snooze_fmt, OVERLAY_SNOOZE_MINUTES)
                         setTextColor(Color.WHITE)
                         textSize = 15f
                         gravity = Gravity.CENTER

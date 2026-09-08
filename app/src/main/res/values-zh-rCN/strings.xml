@@ -153,6 +153,18 @@
     <string name="insomnia_noise">噪音干扰型</string>
     <string name="insomnia_noise_desc">车声、邻居、室友动静</string>
     <string name="ad_blocked_toast">未发布：%s</string>
+    <string name="ad_reason_contact">疑似联系方式/短链：%s</string>
+    <string name="ad_reason_strong">疑似推广关键词：%s</string>
+    <string name="ad_reason_weak">广告特征过多（命中 %s 项）</string>
+
+    <!-- 兜底响铃悬浮窗 -->
+    <string name="ring_overlay_stop">停止</string>
+    <string name="ring_overlay_snooze_fmt">贪睡 %d 分钟</string>
+    <string name="ring_overlay_guide_both">右滑关闭 · 左滑贪睡 %d 分钟</string>
+    <string name="ring_overlay_guide_dismiss">右滑关闭</string>
+    <string name="ring_overlay_alarm_subtitle">闹钟响铃中</string>
+    <string name="ring_overlay_timer_subtitle">计时结束</string>
+    <string name="ring_overlay_hint">响铃页被系统拦截，这是兜底界面。建议：设置 → 一键开启所需权限，开启“后台弹出界面”和“锁屏显示”</string>
 
     <!-- 寻找张怀民 -->
     <string name="night_talk_title">寻找张怀民</string>

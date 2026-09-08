@@ -159,10 +159,22 @@
     <string name="insomnia_noise">Noise disturbance</string>
     <string name="insomnia_noise_desc">Traffic, neighbors, roommates</string>
     <string name="ad_blocked_toast">Not posted: %s</string>
+    <string name="ad_reason_contact">Suspicious contact info or short link: %s</string>
+    <string name="ad_reason_strong">Promotional keyword: %s</string>
+    <string name="ad_reason_weak">Too many ad signals (%s hits)</string>
+
+    <!-- Ring overlay fallback page -->
+    <string name="ring_overlay_stop">Stop</string>
+    <string name="ring_overlay_snooze_fmt">Snooze %d min</string>
+    <string name="ring_overlay_guide_both">Swipe right to dismiss · Swipe left to snooze %d min</string>
+    <string name="ring_overlay_guide_dismiss">Swipe right to dismiss</string>
+    <string name="ring_overlay_alarm_subtitle">Alarm ringing</string>
+    <string name="ring_overlay_timer_subtitle">Timer finished</string>
+    <string name="ring_overlay_hint">The ring page was blocked by the system, so this fallback is shown. Suggestion: Settings → Set up all permissions, enable "Background pop-up" and "Display on lock screen"</string>
 
     <!-- Night talk (寻找张怀民) -->
     <string name="night_talk_title">Find Zhang Huaimin</string>
-    <string name="night_talk_subtitle">For those still awake · 怀民亦未寝</string>
+    <string name="night_talk_subtitle">For the other souls still awake tonight</string>
     <string name="night_talk_hour_fmt">It is %s</string>
     <string name="night_talk_daily_label">Tonight\'s line</string>
     <string name="night_talk_profile_label">Sleep profile</string>

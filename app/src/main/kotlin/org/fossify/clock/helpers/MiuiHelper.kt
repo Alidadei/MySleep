@@ -39,7 +39,7 @@ object MiuiHelper {
                 android.app.AppOpsManager.MODE_ALLOWED -> "ON"
                 android.app.AppOpsManager.MODE_IGNORED -> "OFF"
                 android.app.AppOpsManager.MODE_ERRORED -> "OFF(errored)"
-                android.app.AppOpsManager.MODE_DEFAULT -> "默认"
+                android.app.AppOpsManager.MODE_DEFAULT -> "default"
                 else -> result.toString()
             }
         } catch (e: Exception) {

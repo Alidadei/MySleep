@@ -283,7 +283,13 @@ class RelaxFragment : Fragment() {
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
             .text = when {
                 // placeholder rating shown until real user ratings land (contract §1)
-                !item.sampleRating.isNullOrBlank() -> item.sampleRating
+                item.sampleRatingAvg != null && item.sampleRatingCount != null ->
+                    getString(
+                        R.string.community_rating_fmt,
+                        item.sampleRatingAvg,
+                        item.sampleRatingCount
+                    )
+
                 item.isLocal -> getString(R.string.relax_local_label)
                 else -> item.url
             }
@@ -506,9 +512,17 @@ class RelaxFragment : Fragment() {
                 val url = RelaxStore.normalizeUrl(urlInput.text.toString())
                 when (val verdict = AdGuard.check(title, url)) {
                     is AdGuard.Verdict.Blocked -> {
-                        requireContext().toast(
-                            getString(R.string.ad_blocked_toast, verdict.reason)
-                        )
+                        val reasonText = when (verdict.code) {
+                            AdGuard.REASON_CONTACT ->
+                                getString(R.string.ad_reason_contact, verdict.detail)
+
+                            AdGuard.REASON_STRONG ->
+                                getString(R.string.ad_reason_strong, verdict.detail)
+
+                            else ->
+                                getString(R.string.ad_reason_weak, verdict.detail)
+                        }
+                        requireContext().toast(getString(R.string.ad_blocked_toast, reasonText))
                     }
 
                     AdGuard.Verdict.Ok -> {
