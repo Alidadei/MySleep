@@ -31,6 +31,8 @@ data class RelaxItem(
     val isCustom: Boolean = false,
     val isLocal: Boolean = false,
     val type: String? = null,
+    val sample: Boolean = false,
+    val sampleRating: String? = null,
 )
 
 object RelaxStore {

@@ -274,13 +274,18 @@ class RelaxFragment : Fragment() {
             R.layout.item_relax, binding.relaxHolder, false
         ) as LinearLayout
 
-        row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
-            .text = item.title
+        val titleView = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
+        titleView.text = if (item.sample) {
+            getString(R.string.relax_sample_badge) + item.title
+        } else {
+            item.title
+        }
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .text = if (item.isLocal) {
-                getString(R.string.relax_local_label)
-            } else {
-                item.url
+            .text = when {
+                // placeholder rating shown until real user ratings land (contract §1)
+                !item.sampleRating.isNullOrBlank() -> item.sampleRating
+                item.isLocal -> getString(R.string.relax_local_label)
+                else -> item.url
             }
 
         row.setOnClickListener {

@@ -132,6 +132,7 @@
     <string name="relax_title_optional_hint">Title (leave empty to fetch automatically)</string>
     <string name="relax_unnamed_fmt">Untitled · %s</string>
     <string name="relax_edit">Edit</string>
+    <string name="relax_sample_badge">[Sample] </string>
     <string name="relax_import_data">Import data</string>
     <string name="relax_export_data">Export data</string>
     <string name="relax_import_ok">Imported %d new entries</string>

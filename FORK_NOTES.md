@@ -172,6 +172,18 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   P0=网站 localStorage 与 APP 各存本机、导出/导入 JSON 搬运；P1 规划=Supabase
   免费档两端 REST 直连（RelaxStore 已是预留换源点）
 
+## v1.3.3 三页数据导入/导出（与 cyberSleepCommunity 网站数据互通）
+- **收藏夹、社区推荐、夜话随记**三个页面各自新增"导入数据/导出数据"按钮
+  （SAF 文件选择器，无存储权限）
+- 统一走新 helper `RelaxDataIO`：导出=Gson 数组 JSON（文件名带来源标识），
+  导入=按 id + url 双重去重合并（不覆盖现有），后台线程执行 + 结果 toast
+  （已导入 N 条 / 无新增 / 格式不符）
+- **社区推荐格式 = cyberSleepCommunity 数据契约 v1 原生格式**（CommunityPick
+  纯数组，字段 id/title/url/type/ratings/addedAt）——网站导出的 JSON 可直接
+  导入 APP，APP 导出的也可被网站"导入数据"按钮直接吃，P0 搬运链路闭环
+- 防进程死亡重建崩溃：ioKind 用默认值兜底而非 lateinit
+- 11 项测试全绿
+
 ## 可靠性说明（重要）
 - **完全关机（长按电源键关机）后，任何第三方 APP 都无法被唤醒**——RTC 硬件闹钟只有
   厂商系统级时钟可用，这是硬件/系统层限制。可用的替代：部分机型自带"定时开机"；
