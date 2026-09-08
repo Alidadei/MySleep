@@ -161,6 +161,17 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   对话框：应用图标+名称+版本+一句话定位+GitHub 项目主页链接（Alidadei/MySleep）+
   上游 GPL-3.0 致谢 + "数据只存本机"隐私说明
 
+## v1.3.2 收藏可编辑 + 姊妹平台启动
+- 收藏条目长按从"仅删除"改为**编辑/删除**菜单：网页收藏可改标题+链接（粘贴
+  校验同添加流程），本地文件收藏只改标题（content URI 是系统授权不可手改）
+- RelaxStore 新增 `updateCustomItem`
+- **姊妹平台「赛博睡眠社区 cyberSleep」初始化**（`R:\Code\MY project\cyberSleepCommunity`，
+  GitHub: Alidadei/cyberSleepCommunity，Pages 已上线）：与 APP 共享数据的犯困内容
+  收藏站；数据契约 `docs/DATA_CONTRACT.md`（CommunityPick schema/四型/排序规则/
+  AdGuard 词表三处同步约定）+ agent 接手文档 `docs/AGENT_HANDOFF.md`；
+  P0=网站 localStorage 与 APP 各存本机、导出/导入 JSON 搬运；P1 规划=Supabase
+  免费档两端 REST 直连（RelaxStore 已是预留换源点）
+
 ## 可靠性说明（重要）
 - **完全关机（长按电源键关机）后，任何第三方 APP 都无法被唤醒**——RTC 硬件闹钟只有
   厂商系统级时钟可用，这是硬件/系统层限制。可用的替代：部分机型自带"定时开机"；

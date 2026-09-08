@@ -126,6 +126,13 @@
     <string name="relax_title_optional_hint">标题（留空自动获取）</string>
     <string name="relax_unnamed_fmt">未命名 · %s</string>
     <string name="relax_edit">编辑</string>
+    <string name="relax_import_data">导入数据</string>
+    <string name="relax_export_data">导出数据</string>
+    <string name="relax_import_ok">已导入 %d 条</string>
+    <string name="relax_import_none">没有新增（重复内容已跳过）</string>
+    <string name="relax_import_bad">文件格式不符</string>
+    <string name="relax_export_ok">已导出</string>
+    <string name="relax_import_failed">导出失败</string>
 
     <!-- 关于 -->
     <string name="about_tagline">光唤醒 · 睡前助眠 · 深夜陪伴</string>

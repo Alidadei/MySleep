@@ -98,6 +98,20 @@ object NightTalk {
             .apply()
     }
 
+    /** Merge imported notes (same ids skipped). Returns added count. */
+    fun mergeNotes(context: Context, imported: List<NightNote>): Int {
+        val notes = getNotes(context)
+        val knownIds = notes.map { it.id }.toSet()
+        val fresh = imported.filter { it.text.isNotBlank() && it.id !in knownIds }
+        if (fresh.isNotEmpty()) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_NOTES, Gson().toJson(fresh + notes))
+                .apply()
+        }
+        return fresh.size
+    }
+
     // ---- 时辰 ----
 
     /** Traditional Chinese double-hour (时辰) label for the current time. */

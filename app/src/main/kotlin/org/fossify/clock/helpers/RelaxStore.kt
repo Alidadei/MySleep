@@ -109,6 +109,36 @@ object RelaxStore {
         }
     }
 
+    /** Merge imported favorites (same ids or same urls are skipped). Returns added count. */
+    fun mergeCustomItems(context: Context, imported: List<RelaxItem>): Int {
+        val items = getCustomItems(context)
+        val knownIds = items.map { it.id }.toSet()
+        val knownUrls = items.map { it.url }.toSet()
+        val fresh = imported.filter {
+            it.title.isNotBlank() && it.url.isNotBlank() &&
+                it.id !in knownIds && it.url !in knownUrls
+        }
+        if (fresh.isNotEmpty()) {
+            saveItems(context, items + fresh)
+        }
+        return fresh.size
+    }
+
+    /** Merge imported community picks (same ids or same urls skipped). Returns added count. */
+    fun mergeCommunityPicks(context: Context, imported: List<CommunityPick>): Int {
+        val picks = getCommunityPicks(context)
+        val knownIds = picks.map { it.id }.toSet()
+        val knownUrls = picks.map { it.url }.toSet()
+        val fresh = imported.filter {
+            it.title.isNotBlank() && it.url.isNotBlank() &&
+                it.id !in knownIds && it.url !in knownUrls
+        }
+        if (fresh.isNotEmpty()) {
+            saveCommunityPicks(context, picks + fresh)
+        }
+        return fresh.size
+    }
+
     private fun saveItems(context: Context, items: List<RelaxItem>) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()

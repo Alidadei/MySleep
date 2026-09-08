@@ -1,19 +1,24 @@
 package org.fossify.clock.activities
 
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import org.fossify.clock.R
 import org.fossify.clock.databinding.ActivityNightTalkBinding
 import org.fossify.clock.helpers.InsomniaTypes
 import org.fossify.clock.helpers.NightTalk
+import org.fossify.clock.helpers.RelaxDataIO
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getAlertDialogBuilder
+import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.viewBinding
+import org.fossify.commons.helpers.ensureBackgroundThread
 
 /**
  * "寻找张怀民" - the nighttime companionship corner (承天寺 hub card opens
@@ -24,6 +29,20 @@ import org.fossify.commons.extensions.viewBinding
 class NightTalkActivity : SimpleActivity() {
 
     private val binding by viewBinding(ActivityNightTalkBinding::inflate)
+
+    private val notesImporter =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                handleImport(uri)
+            }
+        }
+
+    private val notesExporter =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri != null) {
+                handleExport(uri)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +55,41 @@ class NightTalkActivity : SimpleActivity() {
 
         binding.nightTalkEditProfile.setOnClickListener { showProfileDialog() }
         binding.nightTalkAddNote.setOnClickListener { showAddNoteDialog() }
+        binding.nightTalkImport.setOnClickListener {
+            notesImporter.launch(arrayOf("application/json", "text/*", "*/*"))
+        }
+        binding.nightTalkExport.setOnClickListener {
+            notesExporter.launch(RelaxDataIO.defaultFileName(RelaxDataIO.KIND_NOTES))
+        }
 
         refreshProfile()
         refreshNotes()
+    }
+
+    private fun handleExport(uri: Uri) {
+        toast(
+            if (RelaxDataIO.writeToUri(RelaxDataIO.KIND_NOTES, this, uri)) {
+                R.string.relax_export_ok
+            } else {
+                R.string.relax_import_failed
+            }
+        )
+    }
+
+    private fun handleImport(uri: Uri) {
+        ensureBackgroundThread {
+            val added = RelaxDataIO.mergeFromUri(RelaxDataIO.KIND_NOTES, this, uri)
+            runOnUiThread {
+                when {
+                    added < 0 -> toast(R.string.relax_import_bad)
+                    added == 0 -> toast(R.string.relax_import_none)
+                    else -> {
+                        toast(getString(R.string.relax_import_ok, added))
+                        refreshNotes()
+                    }
+                }
+            }
+        }
     }
 
     private fun refreshProfile() {

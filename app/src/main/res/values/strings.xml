@@ -132,6 +132,13 @@
     <string name="relax_title_optional_hint">Title (leave empty to fetch automatically)</string>
     <string name="relax_unnamed_fmt">Untitled · %s</string>
     <string name="relax_edit">Edit</string>
+    <string name="relax_import_data">Import data</string>
+    <string name="relax_export_data">Export data</string>
+    <string name="relax_import_ok">Imported %d new entries</string>
+    <string name="relax_import_none">No new entries (duplicates skipped)</string>
+    <string name="relax_import_bad">File format mismatch</string>
+    <string name="relax_export_ok">Exported</string>
+    <string name="relax_import_failed">Export failed</string>
 
     <!-- About -->
     <string name="about_tagline">Light wake-up · Bedtime relax · Late-night company</string>

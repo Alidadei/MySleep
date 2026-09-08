@@ -60,6 +60,24 @@ class RelaxFragment : Fragment() {
             }
         }
 
+    // survives process death only as a best effort - defaulting to favorites
+    // keeps the launcher callback safe when the fragment is recreated
+    private var ioKind: String = org.fossify.clock.helpers.RelaxDataIO.KIND_FAVORITES
+
+    private val dataImporter =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                handleDataImport(uri)
+            }
+        }
+
+    private val dataExporter =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri != null) {
+                handleDataExport(uri)
+            }
+        }
+
     private val backCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             showHub()
@@ -97,6 +115,24 @@ class RelaxFragment : Fragment() {
         binding.relaxBack.setOnClickListener { showHub() }
         binding.relaxAddFavorite.setOnClickListener { showAddChoiceDialog() }
         binding.relaxRecommend.setOnClickListener { showRecommendDialog() }
+        binding.relaxImportData.setOnClickListener {
+            ioKind = if (currentSection == Section.FAVORITES) {
+                org.fossify.clock.helpers.RelaxDataIO.KIND_FAVORITES
+            } else {
+                org.fossify.clock.helpers.RelaxDataIO.KIND_COMMUNITY
+            }
+            dataImporter.launch(arrayOf("application/json", "text/*", "*/*"))
+        }
+        binding.relaxExportData.setOnClickListener {
+            ioKind = if (currentSection == Section.FAVORITES) {
+                org.fossify.clock.helpers.RelaxDataIO.KIND_FAVORITES
+            } else {
+                org.fossify.clock.helpers.RelaxDataIO.KIND_COMMUNITY
+            }
+            dataExporter.launch(
+                org.fossify.clock.helpers.RelaxDataIO.defaultFileName(ioKind)
+            )
+        }
 
         showHub()
         refreshReportSubtitle()
@@ -523,6 +559,36 @@ class RelaxFragment : Fragment() {
         val title = queryDisplayName(uri) ?: getString(R.string.relax_local_label)
         RelaxStore.addCustomItem(requireContext(), title, uri.toString(), isLocal = true)
         populateSection(Section.FAVORITES)
+    }
+
+    private fun handleDataExport(uri: android.net.Uri) {
+        val ok = org.fossify.clock.helpers.RelaxDataIO.writeToUri(
+            ioKind, requireContext(), uri
+        )
+        requireContext().toast(
+            if (ok) R.string.relax_export_ok else R.string.relax_import_failed
+        )
+    }
+
+    private fun handleDataImport(uri: android.net.Uri) {
+        ensureBackgroundThread {
+            val added = org.fossify.clock.helpers.RelaxDataIO.mergeFromUri(
+                ioKind, requireContext(), uri
+            )
+            activity?.runOnUiThread {
+                if (!isAdded) {
+                    return@runOnUiThread
+                }
+                when {
+                    added < 0 -> requireContext().toast(R.string.relax_import_bad)
+                    added == 0 -> requireContext().toast(R.string.relax_import_none)
+                    else -> {
+                        requireContext().toast(getString(R.string.relax_import_ok, added))
+                        populateSection(currentSection)
+                    }
+                }
+            }
+        }
     }
 
     private fun queryDisplayName(uri: Uri): String? {
