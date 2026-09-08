@@ -131,6 +131,7 @@
     <string name="relax_paste_hint">Paste a link or a whole share text (Bilibili share works)</string>
     <string name="relax_title_optional_hint">Title (leave empty to fetch automatically)</string>
     <string name="relax_unnamed_fmt">Untitled · %s</string>
+    <string name="relax_edit">Edit</string>
 
     <!-- About -->
     <string name="about_tagline">Light wake-up · Bedtime relax · Late-night company</string>

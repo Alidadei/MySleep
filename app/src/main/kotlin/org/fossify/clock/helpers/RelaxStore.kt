@@ -99,6 +99,16 @@ object RelaxStore {
         saveItems(context, items)
     }
 
+    fun updateCustomItem(context: Context, id: Long, title: String, url: String) {
+        val items = getCustomItems(context)
+        val index = items.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            val old = items[index]
+            items[index] = old.copy(title = title, url = url)
+            saveItems(context, items)
+        }
+    }
+
     private fun saveItems(context: Context, items: List<RelaxItem>) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()

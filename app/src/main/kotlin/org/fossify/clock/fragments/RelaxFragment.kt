@@ -253,19 +253,114 @@ class RelaxFragment : Fragment() {
 
         if (deletable) {
             row.setOnLongClickListener {
-                requireActivity().getAlertDialogBuilder()
-                    .setMessage(R.string.relax_delete_confirm)
-                    .setPositiveButton(R.string.relax_remove) { _, _ ->
-                        RelaxStore.removeCustomItem(requireContext(), item.id)
-                        populateSection(Section.FAVORITES)
-                    }
-                    .setNegativeButton(org.fossify.commons.R.string.cancel, null)
-                    .show()
+                showItemActionsDialog(item)
                 true
             }
         }
 
         binding.relaxHolder.addView(row)
+    }
+
+    /** Long-press on a favorite: edit or remove (not just remove). */
+    private fun showItemActionsDialog(item: RelaxItem) {
+        val options = arrayOf(
+            getString(R.string.relax_edit),
+            getString(R.string.relax_remove)
+        )
+        requireActivity().getAlertDialogBuilder()
+            .setTitle(item.title)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showEditFavoriteDialog(item)
+                    1 -> requireActivity().getAlertDialogBuilder()
+                        .setMessage(R.string.relax_delete_confirm)
+                        .setPositiveButton(R.string.relax_remove) { _, _ ->
+                            RelaxStore.removeCustomItem(requireContext(), item.id)
+                            populateSection(Section.FAVORITES)
+                        }
+                        .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                        .show()
+                }
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
+    }
+
+    private fun showEditFavoriteDialog(item: RelaxItem) {
+        val holder = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                resources.displayMetrics.widthPixels / 10, 40,
+                resources.displayMetrics.widthPixels / 10, 0
+            )
+        }
+
+        val titleInput = EditText(requireContext()).apply {
+            hint = getString(R.string.relax_title_hint)
+            setText(item.title)
+        }
+        holder.addView(titleInput)
+
+        // local content URIs are opaque grants - only the label is editable
+        if (!item.isLocal) {
+            val urlInput = EditText(requireContext()).apply {
+                hint = getString(R.string.relax_url_hint)
+                setText(item.url)
+            }
+            holder.addView(urlInput)
+
+            val dialog = requireActivity().getAlertDialogBuilder()
+                .setTitle(R.string.relax_edit)
+                .setPositiveButton(org.fossify.commons.R.string.ok, null)
+                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                .create()
+
+            dialog.setOnShowListener {
+                val okButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                okButton.isEnabled = item.title.isNotBlank()
+
+                val watcher = object : TextWatcher {
+                    override fun afterTextChanged(s: Editable?) {
+                        okButton.isEnabled = titleInput.text.isNotBlank() &&
+                            RelaxStore.isValidUrl(urlInput.text.toString())
+                    }
+
+                    override fun beforeTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+                    override fun onTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) = Unit
+                }
+                titleInput.addTextChangedListener(watcher)
+                urlInput.addTextChangedListener(watcher)
+
+                okButton.setOnClickListener {
+                    RelaxStore.updateCustomItem(
+                        requireContext(),
+                        item.id,
+                        titleInput.text.toString().trim(),
+                        RelaxStore.normalizeUrl(urlInput.text.toString())
+                    )
+                    dialog.dismiss()
+                    populateSection(Section.FAVORITES)
+                }
+            }
+
+            dialog.setView(holder)
+            dialog.show()
+            return
+        }
+
+        val dialog = requireActivity().getAlertDialogBuilder()
+            .setTitle(R.string.relax_edit)
+            .setView(holder)
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                val title = titleInput.text.toString().trim()
+                if (title.isNotEmpty()) {
+                    RelaxStore.updateCustomItem(requireContext(), item.id, title, item.url)
+                    populateSection(Section.FAVORITES)
+                }
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .create()
+        dialog.show()
     }
 
     private fun addCommunityRow(pick: CommunityPick) {
