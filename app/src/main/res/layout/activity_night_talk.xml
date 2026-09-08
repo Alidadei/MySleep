@@ -36,6 +36,7 @@
                 android:layout_height="wrap_content"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:maxLines="1"
                 android:minWidth="0dp"
                 android:text="@string/relax_import_data"
                 android:textSize="13sp" />
@@ -48,6 +49,7 @@
                 android:layout_marginStart="8dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:maxLines="1"
                 android:minWidth="0dp"
                 android:text="@string/relax_export_data"
                 android:textSize="13sp" />
