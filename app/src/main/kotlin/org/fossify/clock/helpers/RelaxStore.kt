@@ -23,6 +23,8 @@ data class CommunityPick(
     var ratings: MutableList<Int>? = null,
     var addedAt: Long = 0,
     var type: String? = null,
+    /** Times the same url was submitted by anyone (cloud column recommend_count). */
+    var recommendCount: Int = 1,
 )
 data class RelaxItem(
     val id: Long,
@@ -246,6 +248,12 @@ object RelaxStore {
             ratings.add(rating.coerceIn(1, 5))
             saveCommunityPicks(context, picks)
         }
+    }
+
+    /** Replace the local community cache with the cloud's authoritative rows
+     *  (offline fallback keeps serving this cache). */
+    fun replaceAllCommunityPicks(context: Context, picks: List<CommunityPick>) {
+        saveCommunityPicks(context, picks)
     }
 
     private fun saveCommunityPicks(context: Context, picks: List<CommunityPick>) {

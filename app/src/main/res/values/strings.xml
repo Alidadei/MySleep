@@ -99,6 +99,7 @@
     <string name="recommend_add">Recommend content</string>
     <string name="rate_prompt">Rate how well this helped you sleep (5 = best)</string>
     <string name="community_rating_fmt">★ %1$.1f · %2$d ratings</string>
+    <string name="community_cloud_failed">Network unavailable - not synced to the cloud</string>
     <string name="battery_prompt_title">Reliable alarms</string>
     <string name="autostart_prompt_title">Alarms after reboot</string>
     <string name="autostart_prompt_message">Your phone maker blocks apps from starting themselves by default. Allow autostart for Sleep Station on the next screen so alarms keep working after a reboot.</string>

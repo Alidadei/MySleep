@@ -16,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import com.google.android.material.chip.Chip
 import org.fossify.clock.R
 import org.fossify.clock.activities.NightTalkActivity
 import org.fossify.clock.activities.SleepReportActivity
@@ -161,6 +160,8 @@ class RelaxFragment : Fragment() {
         binding.relaxSectionTitle.setText(
             if (section == Section.FAVORITES) R.string.relax_custom_label else R.string.relax_picks_label
         )
+        // 站主定稿：精选页顶部不再重复"精选推荐"字样
+        binding.relaxSectionTitle.beGoneIf(section == Section.PICKS)
         binding.relaxTypeChipsScroll.beVisibleIf(section == Section.PICKS)
         if (section == Section.PICKS && !chipsBuilt) {
             buildTypeChips()
@@ -173,27 +174,31 @@ class RelaxFragment : Fragment() {
         val group = binding.relaxTypeChips
         val entries = mutableListOf(InsomniaTypes.KEY_ALL)
         entries.addAll(InsomniaTypes.types.map { it.key })
+        val chipViews = mutableListOf<org.fossify.commons.views.MyTextView>()
 
-        entries.forEachIndexed { index, key ->
+        entries.forEach { key ->
             val chip = LayoutInflater.from(requireContext())
-                .inflate(R.layout.item_type_chip, group, false) as Chip
+                .inflate(R.layout.item_type_chip, group, false) as org.fossify.commons.views.MyTextView
             chip.text = if (key == InsomniaTypes.KEY_ALL) {
                 getString(R.string.insomnia_all)
             } else {
                 InsomniaTypes.labelKey(requireContext(), key)
             }
-            chip.isChecked = key == selectedType
-            chip.setOnCheckedChangeListener { _, checked ->
-                if (checked) {
-                    selectedType = key
-                    populateSection(Section.PICKS)
+            chip.isSelected = key == selectedType
+            chip.setOnClickListener {
+                if (selectedType == key) {
+                    return@setOnClickListener
                 }
+                selectedType = key
+                chipViews.forEach { it.isSelected = it.text == chip.text }
+                populateSection(Section.PICKS, fromCloud = true)
             }
+            chipViews.add(chip)
             group.addView(chip)
         }
     }
 
-    private fun populateSection(section: Section) {
+    private fun populateSection(section: Section, fromCloud: Boolean = false) {
         binding.relaxHolder.removeAllViews()
 
         if (section == Section.PICKS) {
@@ -216,6 +221,9 @@ class RelaxFragment : Fragment() {
             binding.relaxEmptyCustom.beGone()
             binding.relaxAddFavorite.beGone()
             binding.relaxRecommend.beVisible()
+            if (!fromCloud) {
+                refreshCommunityFromCloud()
+            }
             return
         }
 
@@ -511,6 +519,24 @@ class RelaxFragment : Fragment() {
         requireContext().toast(R.string.relax_favorite_done)
     }
 
+    /** Cloud refresh: fetch authoritative community picks from Supabase,
+     *  replace the local cache and re-render. Silent on failure (offline
+     *  keeps serving the cache). */
+    private fun refreshCommunityFromCloud() {
+        ensureBackgroundThread {
+            val remote = org.fossify.clock.helpers.CommunityRemoteStore.load()
+                ?: return@ensureBackgroundThread
+            if (remote.isNotEmpty()) {
+                RelaxStore.replaceAllCommunityPicks(requireContext(), remote)
+            }
+            activity?.runOnUiThread {
+                if (isAdded && currentSection == Section.PICKS) {
+                    populateSection(Section.PICKS, fromCloud = true)
+                }
+            }
+        }
+    }
+
     private fun showRateDialog(pick: CommunityPick) {
         val labels = (1..5).map { "★ $it" }.toTypedArray()
         val current = pick.ratings?.lastOrNull() ?: 0
@@ -518,9 +544,23 @@ class RelaxFragment : Fragment() {
         requireActivity().getAlertDialogBuilder()
             .setTitle(R.string.rate_prompt)
             .setSingleChoiceItems(labels, current - 1) { dialog, which ->
-                RelaxStore.rateCommunityPick(requireContext(), pick.id, which + 1)
                 dialog?.dismiss()
-                populateSection(Section.PICKS)
+                ensureBackgroundThread {
+                    val ok = org.fossify.clock.helpers.CommunityRemoteStore.rate(
+                        pick.id, which + 1
+                    )
+                    activity?.runOnUiThread {
+                        if (!isAdded) {
+                            return@runOnUiThread
+                        }
+                        if (ok) {
+                            RelaxStore.rateCommunityPick(requireContext(), pick.id, which + 1)
+                        } else {
+                            requireContext().toast(R.string.community_cloud_failed)
+                        }
+                        populateSection(Section.PICKS, fromCloud = true)
+                    }
+                }
             }
             .setNegativeButton(org.fossify.commons.R.string.cancel, null)
             .show()
@@ -595,18 +635,24 @@ class RelaxFragment : Fragment() {
                     }
 
                     AdGuard.Verdict.Ok -> {
-                        RelaxStore.addCommunityPick(
-                            requireContext(),
-                            title,
-                            url,
-                            type = if (selectedType >= 0) {
-                                InsomniaTypes.types[selectedType].key
-                            } else {
-                                null
+                        val pickedType =
+                            if (selectedType >= 0) InsomniaTypes.types[selectedType].key else null
+                        ensureBackgroundThread {
+                            val ok = org.fossify.clock.helpers.CommunityRemoteStore.add(
+                                requireContext(), title, url, pickedType
+                            )
+                            activity?.runOnUiThread {
+                                if (!isAdded) {
+                                    return@runOnUiThread
+                                }
+                                if (ok) {
+                                    dialog.dismiss()
+                                    populateSection(Section.PICKS, fromCloud = true)
+                                } else {
+                                    requireContext().toast(R.string.community_cloud_failed)
+                                }
                             }
-                        )
-                        dialog.dismiss()
-                        populateSection(Section.PICKS)
+                        }
                     }
                 }
             }

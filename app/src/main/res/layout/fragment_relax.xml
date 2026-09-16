@@ -262,12 +262,12 @@
                 android:visibility="gone"
                 xmlns:app="http://schemas.android.com/apk/res-auto">
 
-                <com.google.android.material.chip.ChipGroup
+                <LinearLayout
                     android:id="@+id/relax_type_chips"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:singleSelection="true"
-                    app:selectionRequired="true" />
+                    android:orientation="horizontal"
+                    android:paddingEnd="8dp" />
             </HorizontalScrollView>
 
             <LinearLayout
