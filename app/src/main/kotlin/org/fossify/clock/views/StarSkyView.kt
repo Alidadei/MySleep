@@ -18,7 +18,9 @@ import kotlin.random.Random
 /**
  * 整页天空 —— 复刻网站 page-sky 双层设计：
  * 夜：深空底（藕荷紫同宗径向渐变）+ 银河带两层 + 星云三团 + 尘埃星 170 +
- *     四层闪烁星（微小/中/光晕/十字芒，呼吸式正弦明暗逐字对齐网站，固定种子 20260910 可复现）+ 低频流星（7–16s 一颗）；
+ *     四层呼吸星（正弦明暗不熄灭；速度=网站 0.45 倍，周期约 5–17s；固定种子 20260910 可复现）
+ *     + 流星（4–9s 一颗，长尾+亮头，比网站更显眼）；
+ * 动画钟 = 首帧起算的秒（Double），勿用 nanoTime 原值当秒——相位会伪随机频闪。
  * 昼：个人站同款暖渐变 + 太阳光晕。
  * 两层透明度随 TimeTheme.t 交叉淡化（夜星 opacity=1-t，昼空 opacity=t）。
  * 动画帧率克制（闪烁用 sin 相位，不逐帧重建），t≥0.97 时完全跳过夜空绘制（省电，同网站）。
@@ -34,7 +36,8 @@ class StarSkyView @JvmOverloads constructor(
     private val shooters = mutableListOf<Shooter>()
     private var seed = 20260910L
     private var lastFrame = 0L
-    private var shootTimer = 4f + Random.nextFloat() * 6f
+    private var animOriginNs = 0L
+    private var shootTimer = 2f + Random.nextFloat() * 3f
 
     private class Twinkle(
         val x: Float, val y: Float, val size: Float, val base: Float,
@@ -145,12 +148,13 @@ class StarSkyView @JvmOverloads constructor(
         val medCols = arrayOf("200,215,255", "255,245,220", "180,200,255", "255,220,180")
         fun pickCol(): IntArray = starCols[(rand() * starCols.size).toInt()]
 
-        // 闪烁星四层 —— 速度/亮度逐字对齐网站 twinkles（微小 60 轻闪 / 中 18 / 光晕 8 / 十字芒 2）
+        // 闪烁星四层：亮度公式对齐网站，速度 = 网站的 0.45 倍（单星呼吸周期约 5–17s，
+        // 站主要求"必须平滑缓慢"，比网页版更沉）
         repeat(60) {
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 0.5f + rand() * 0.8f, 0.25f + rand() * 0.35f,
-                    0.8f + rand() * 1.7f, rand() * Math.PI.toFloat() * 2,
+                    0.36f + rand() * 0.77f, rand() * Math.PI.toFloat() * 2,
                     pickCol().joinToString(","), small = true
                 )
             )
@@ -159,7 +163,7 @@ class StarSkyView @JvmOverloads constructor(
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 1f + rand() * 1.1f, 0.35f + rand() * 0.4f,
-                    0.8f + rand() * 1.8f, rand() * Math.PI.toFloat() * 2,
+                    0.36f + rand() * 0.81f, rand() * Math.PI.toFloat() * 2,
                     medCols[(rand() * medCols.size).toInt()]
                 )
             )
@@ -168,7 +172,7 @@ class StarSkyView @JvmOverloads constructor(
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 1.2f + rand() * 1.6f, 0.85f,
-                    0.4f + rand() * 1.1f, rand() * Math.PI.toFloat() * 2,
+                    0.18f + rand() * 0.5f, rand() * Math.PI.toFloat() * 2,
                     pickCol().joinToString(","), glow = true
                 )
             )
@@ -177,7 +181,7 @@ class StarSkyView @JvmOverloads constructor(
             twinks.add(
                 Twinkle(
                     w * 0.08f + rand() * w * 0.84f, h * 0.08f + rand() * h * 0.6f,
-                    1.8f + rand() * 1.8f, 0.9f, 0.25f + rand() * 0.5f,
+                    1.8f + rand() * 1.8f, 0.9f, 0.11f + rand() * 0.23f,
                     rand() * Math.PI.toFloat() * 2, pickCol().joinToString(","), spikes = true
                 )
             )
@@ -185,9 +189,8 @@ class StarSkyView @JvmOverloads constructor(
         nightLayer = bmp
     }
 
-    /** 供宿主在帧循环/onResume 里驱动重绘（闪烁与流星） */
+    /** 供宿主触发重绘（不动时间基准，避免流星 dt 被截断） */
     fun tick() {
-        lastFrame = System.nanoTime()
         if (org.fossify.clock.helpers.TimeTheme.current().skyVisible) {
             invalidate()
         }
@@ -263,14 +266,17 @@ class StarSkyView @JvmOverloads constructor(
     }
 
     private fun drawTwinkles(canvas: Canvas, w: Float, h: Float, nightAlpha: Int, dt: Float) {
-        val timeSec = lastFrame / 1000f
+        // 动画钟：从首帧起算的秒（Double 保精度；此前直接用 nanoTime/1000 = 微秒，
+        // 正弦相位每帧乱跳几万弧度，星星呈伪随机频闪——"闪太快"的真凶）
+        if (animOriginNs == 0L) animOriginNs = lastFrame
+        val timeSec = ((lastFrame - animOriginNs) / 1e9).toDouble()
         for (s in twinks) {
-            // 呼吸式明暗，公式逐字对齐网站（正弦涨落不熄灭：小星 50%–100%，大星 30%–100%）
-            val flick = if (s.small) {
-                0.75f + 0.25f * sin(timeSec * s.speed + s.phase)
+            // 呼吸式明暗：正弦涨落不熄灭（小星 50%–100%，大星 30%–100%）；速度为网站的 0.45 倍
+            val flick = (if (s.small) {
+                0.75 + 0.25 * sin(timeSec * s.speed + s.phase)
             } else {
-                0.5f + 0.5f * sin(timeSec * s.speed + s.phase)
-            }
+                0.5 + 0.5 * sin(timeSec * s.speed + s.phase)
+            }).toFloat()
             val alpha = (if (s.small) s.base * flick else s.base * (0.3f + 0.7f * flick)) *
                 (nightAlpha / 255f)
             val col = s.col.split(",").map { it.toInt() }
@@ -309,19 +315,19 @@ class StarSkyView @JvmOverloads constructor(
             }
         }
 
-        // 流星：低频温和（7–16s 一颗，逐字对齐网站）
+        // 流星：4–9s 一颗、尾更长更亮 + 头部亮点（站主要求"必须看得见"，比网站加密加粗）
         paint.shader = null
         if (dt > 0) {
             shootTimer -= dt
             if (shootTimer <= 0) {
-                shootTimer = 7f + Random.nextFloat() * 9f
+                shootTimer = 4f + Random.nextFloat() * 5f
                 val angle = 0.3f + Random.nextFloat() * 0.5f
                 val speed = 240f + Random.nextFloat() * 200f
                 shooters.add(
                     Shooter(
                         w * 0.1f + Random.nextFloat() * w * 0.65f, Random.nextFloat() * h * 0.35f,
                         cos(angle) * speed, sin(angle) * speed,
-                        1f, 0.55f + Random.nextFloat() * 0.3f, 34f + Random.nextFloat() * 46f
+                        1f, 0.45f + Random.nextFloat() * 0.25f, 55f + Random.nextFloat() * 65f
                     )
                 )
             }
@@ -340,12 +346,15 @@ class StarSkyView @JvmOverloads constructor(
                 val ny = s.y - s.vy / speed * tail
                 paint.shader = LinearGradient(
                     s.x, s.y, nx, ny,
-                    Color.argb((0.7f * s.life * 255).toInt(), 220, 225, 255),
+                    Color.argb((0.95f * s.life * 255).toInt(), 220, 225, 255),
                     Color.TRANSPARENT, Shader.TileMode.CLAMP
                 )
-                paint.strokeWidth = 1.4f
+                paint.strokeWidth = 2.4f
                 canvas.drawLine(s.x, s.y, nx, ny, paint)
                 paint.shader = null
+                // 亮头部：让流星在深空底上有清晰的"点"
+                paint.color = Color.argb((0.9f * s.life * 255).toInt(), 238, 242, 255)
+                canvas.drawCircle(s.x, s.y, 1.6f, paint)
             }
         }
     }
