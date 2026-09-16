@@ -96,11 +96,7 @@ class RelaxFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
 
-        val accent = requireContext().getColor(R.color.color_accent)
-        binding.cardFavoritesIcon.applyColorFilter(accent)
-        binding.cardPicksIcon.applyColorFilter(accent)
-        binding.cardReportIcon.applyColorFilter(accent)
-        binding.cardNightTalkIcon.applyColorFilter(accent)
+        applyTimeTheme()
 
         binding.cardFavorites.setOnClickListener { showSection(Section.FAVORITES) }
         binding.cardPicks.setOnClickListener { showSection(Section.PICKS) }
@@ -139,10 +135,120 @@ class RelaxFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        applyTimeTheme()
         refreshReportSubtitle()
         if (binding.relaxSection.visibility == View.VISIBLE) {
-            populateSection(currentSection)
+            populateSection(currentSection, fromCloud = true)
         }
+    }
+
+    // ---- 时辰主题（复刻网站：夜藕荷紫 × 昼琥珀棕，5–8/17–20 插值） ----
+
+    private var theme = org.fossify.clock.helpers.TimeTheme.current()
+    private var handTf: android.graphics.Typeface? = null
+
+    /** 手写体（网站 Ma Shan Zheng；失败回退系统衬线楷体感） */
+    private fun hand(): android.graphics.Typeface {
+        if (handTf == null) {
+            handTf = try {
+                android.graphics.Typeface.createFromAsset(
+                    requireContext().assets, "fonts/ma_shan_zheng.ttf"
+                )
+            } catch (e: Exception) {
+                android.graphics.Typeface.SERIF
+            }
+        }
+        return handTf!!
+    }
+
+    private fun cardDrawable(): android.graphics.drawable.GradientDrawable =
+        android.graphics.drawable.GradientDrawable().apply {
+            setColor(theme.card)
+            setStroke(
+                1,
+                android.graphics.Color.argb(31, // accent 12%
+                    (theme.accent shr 16) and 0xFF,
+                    (theme.accent shr 8) and 0xFF,
+                    theme.accent and 0xFF
+                )
+            )
+            cornerRadius = 14f * resources.displayMetrics.density
+        }
+
+    /** 网站卡片是毛玻璃（card 40% + blur），Android 用 60% 半透明实底近似降级 */
+    private fun translucentCardDrawable(): android.graphics.drawable.GradientDrawable =
+        android.graphics.drawable.GradientDrawable().apply {
+            setColor(android.graphics.Color.argb(153,
+                (theme.card shr 16) and 0xFF,
+                (theme.card shr 8) and 0xFF,
+                theme.card and 0xFF))
+            setStroke(
+                1,
+                android.graphics.Color.argb(31,
+                    (theme.accent shr 16) and 0xFF,
+                    (theme.accent shr 8) and 0xFF,
+                    theme.accent and 0xFF)
+            )
+            cornerRadius = 14f * resources.displayMetrics.density
+        }
+
+    private fun applyTimeTheme() {
+        theme = org.fossify.clock.helpers.TimeTheme.current()
+        if (!isAdded) return
+
+        // 品牌区（月/日随 t 交叉淡化，accent 描边；标题 grey 楷体；渐变短线 accent→accent2）
+        binding.brandMoon.alpha = 1f - theme.t
+        binding.brandSun.alpha = theme.t
+        binding.brandMoon.applyColorFilter(theme.accent)
+        binding.brandSun.applyColorFilter(theme.accent)
+        binding.brandTitle.setTextColor(theme.grey)
+        binding.brandTitle.typeface = hand()
+        binding.brandLine.background = android.graphics.drawable.GradientDrawable(
+            android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+            intArrayOf(theme.accent, theme.accent2)
+        ).apply { cornerRadius = 6f }
+        binding.brandSubtitle.setTextColor(theme.sub)
+        binding.brandSubtitle.typeface = hand()
+
+        // hub 卡片流：动态卡片底 + accent 图标 + ink 标题 + sub 副标题
+        listOf(
+            binding.cardFavorites to binding.cardFavoritesIcon,
+            binding.cardPicks to binding.cardPicksIcon,
+            binding.cardReport to binding.cardReportIcon,
+            binding.cardNightTalk to binding.cardNightTalkIcon
+        ).forEach { (card, icon) ->
+            card.background = translucentCardDrawable()
+            icon.applyColorFilter(theme.accent)
+            var titleSeen = false
+            for (i in 0 until card.childCount) {
+                val inner = card.getChildAt(i)
+                if (inner is ViewGroup) {
+                    for (j in 0 until inner.childCount) {
+                        val tv = inner.getChildAt(j) as? org.fossify.commons.views.MyTextView
+                        if (tv != null) {
+                            if (!titleSeen) {
+                                tv.setTextColor(theme.ink)
+                                titleSeen = true
+                            } else {
+                                tv.setTextColor(theme.sub)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // section 固定件
+        binding.relaxBack.setTextColor(theme.accent)
+        binding.relaxSectionTitle.setTextColor(theme.ink)
+        binding.relaxImportData.setTextColor(theme.sub)
+        binding.relaxExportData.setTextColor(theme.sub)
+        binding.relaxEmptyCustom.setTextColor(theme.sub)
+
+        // Material 按钮对齐夜航紫（可交互=暮紫）
+        val actTint = android.content.res.ColorStateList.valueOf(theme.act)
+        binding.relaxRecommend.backgroundTintList = actTint
+        binding.relaxAddFavorite.backgroundTintList = actTint
     }
 
     private fun showHub() {
@@ -162,7 +268,7 @@ class RelaxFragment : Fragment() {
         )
         // 站主定稿：精选页顶部不再重复"精选推荐"字样
         binding.relaxSectionTitle.beGoneIf(section == Section.PICKS)
-        binding.relaxTypeChipsScroll.beVisibleIf(section == Section.PICKS)
+        binding.relaxTypeChips.beVisibleIf(section == Section.PICKS)
         if (section == Section.PICKS && !chipsBuilt) {
             buildTypeChips()
         }
@@ -185,12 +291,17 @@ class RelaxFragment : Fragment() {
                 InsomniaTypes.labelKey(requireContext(), key)
             }
             chip.isSelected = key == selectedType
+            chip.setTextColor(if (chip.isSelected) theme.grey else theme.sub)
             chip.setOnClickListener {
                 if (selectedType == key) {
                     return@setOnClickListener
                 }
                 selectedType = key
-                chipViews.forEach { it.isSelected = it.text == chip.text }
+                chipViews.forEach { v ->
+                    val on = v.text == chip.text
+                    v.isSelected = on
+                    v.setTextColor(if (on) theme.grey else theme.sub)
+                }
                 populateSection(Section.PICKS, fromCloud = true)
             }
             chipViews.add(chip)
@@ -215,8 +326,8 @@ class RelaxFragment : Fragment() {
                         .thenByDescending { it.ratings?.size ?: 0 }
                         .thenByDescending { it.addedAt }
                 )
-            communityPicks.forEach { pick ->
-                addCommunityRow(pick)
+            communityPicks.forEachIndexed { index, pick ->
+                addCommunityRow(pick, rank = index + 1)
             }
             binding.relaxEmptyCustom.beGone()
             binding.relaxAddFavorite.beGone()
@@ -274,6 +385,7 @@ class RelaxFragment : Fragment() {
             R.layout.item_relax_section, binding.relaxHolder, false
         ) as org.fossify.commons.views.MyTextView
         label.text = text
+        label.setTextColor(theme.sub)
         binding.relaxHolder.addView(label)
     }
 
@@ -281,8 +393,8 @@ class RelaxFragment : Fragment() {
      *  (curated picks & community picks - not the user's own favorites). */
     private fun bindBookmarkButton(row: LinearLayout, url: String) {
         val favButton = row.findViewById<android.widget.ImageView>(R.id.relax_item_fav)
-        val accent = requireContext().getColor(R.color.color_accent)
-        val secondary = requireContext().getColor(R.color.relax_text_secondary)
+        val strokeColor = theme.line
+        favButton.background.setTint(strokeColor)
 
         fun refresh() {
             val favorited = RelaxStore.isUrlFavorited(requireContext(), url)
@@ -290,7 +402,7 @@ class RelaxFragment : Fragment() {
                 if (favorited) R.drawable.ic_bookmark_filled_vector
                 else R.drawable.ic_bookmark_vector
             )
-            favButton.applyColorFilter(if (favorited) accent else secondary)
+            favButton.applyColorFilter(if (favorited) theme.accent else theme.sub)
         }
         refresh()
 
@@ -323,19 +435,26 @@ class RelaxFragment : Fragment() {
         } else {
             item.title
         }
+        titleView.setTextColor(theme.ink)
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .text = when {
-                // placeholder rating shown until real user ratings land (contract §1)
-                item.sampleRatingAvg != null && item.sampleRatingCount != null ->
-                    getString(
-                        R.string.community_rating_fmt,
-                        item.sampleRatingAvg,
-                        item.sampleRatingCount
-                    )
+            .apply {
+                text = when {
+                    // placeholder rating shown until real user ratings land (contract §1)
+                    item.sampleRatingAvg != null && item.sampleRatingCount != null ->
+                        getString(
+                            R.string.community_rating_fmt,
+                            item.sampleRatingAvg,
+                            item.sampleRatingCount
+                        )
 
-                item.isLocal -> getString(R.string.relax_local_label)
-                else -> item.url
+                    item.isLocal -> getString(R.string.relax_local_label)
+                    else -> item.url
+                }
+                setTextColor(theme.sub)
             }
+        row.background = translucentCardDrawable()
+        val favBtn = row.findViewById<android.widget.ImageView>(R.id.relax_item_fav)
+        favBtn.visibility = if (favoriteOnLongPress) View.VISIBLE else View.GONE
 
         row.setOnClickListener {
             openItem(item)
@@ -462,50 +581,116 @@ class RelaxFragment : Fragment() {
     }
 
     /** Long-press on a community pick: rate it or save it to My favorites. */
-    private fun addCommunityRow(pick: CommunityPick) {
+    /** 社区榜单卡：rank mono 序号（第 1 名金灯点亮）+ 居中标题 + ghost rate/fav
+     *  按钮 + 行内五星评分（复刻网站 .card 全形态） */
+    private fun addCommunityRow(pick: CommunityPick, rank: Int) {
         val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
         ) as LinearLayout
+        row.background = translucentCardDrawable()
 
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
-            .text = pick.title
+            .apply {
+                text = pick.title
+                setTextColor(theme.ink)
+            }
+
+        row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_rank)
+            .apply {
+                visibility = View.VISIBLE
+                text = "%02d".format(rank)
+                setTextColor(if (rank == 1) theme.grey else theme.sub)
+            }
+
         val ratings = pick.ratings
         val typeLabel = InsomniaTypes.labelKey(requireContext(), pick.type)
         val typePrefix = typeLabel.ifEmpty { "" }
+        val recText = if ((pick.recommendCount ?: 1) >= 2) {
+            " · ${pick.recommendCount}人推荐"
+        } else {
+            ""
+        }
         row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .text = when {
-                !ratings.isNullOrEmpty() -> {
-                    val ratingText =
-                        getString(R.string.community_rating_fmt, ratings.average(), ratings.size)
-                    if (typePrefix.isEmpty()) ratingText else "[$typePrefix] $ratingText"
+            .apply {
+                text = when {
+                    !ratings.isNullOrEmpty() -> {
+                        val ratingText = getString(
+                            R.string.community_rating_fmt, ratings.average(), ratings.size
+                        )
+                        (if (typePrefix.isEmpty()) "" else "$typePrefix · ") + ratingText + recText
+                    }
+
+                    typePrefix.isNotEmpty() -> "$typePrefix · ${pick.url}$recText"
+
+                    else -> pick.url + recText
                 }
-
-                typePrefix.isNotEmpty() -> "[$typePrefix] ${pick.url}"
-
-                else -> pick.url
+                setTextColor(theme.sub)
             }
+
+        // ghost rate 按钮：展开行内五星（网站 .card .rate + .stars）
+        val rateBtn = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_rate)
+        rateBtn.visibility = View.VISIBLE
+        rateBtn.setTextColor(theme.grey)
+        rateBtn.background.setTint(theme.line)
+        val starsRow = row.findViewById<LinearLayout>(R.id.relax_item_stars)
+        rateBtn.setOnClickListener {
+            if (starsRow.childCount == 0) {
+                buildStarsRow(starsRow, pick)
+            }
+            starsRow.visibility =
+                if (starsRow.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }
         bindBookmarkButton(row, pick.url)
         row.setOnLongClickListener {
-            val options = arrayOf(
-                getString(R.string.relax_action_rate),
-                getString(R.string.relax_favorite_add)
-            )
-            requireActivity().getAlertDialogBuilder()
-                .setTitle(pick.title)
-                .setItems(options) { _, which ->
-                    when (which) {
-                        0 -> showRateDialog(pick)
-                        1 -> favoriteFromPick(pick.title, pick.url)
-                    }
-                }
-                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
-                .show()
+            favoriteFromPick(pick.title, pick.url)
             true
         }
 
         binding.relaxHolder.addView(row)
+    }
+
+    /** 五星行内评分：默认空心 accent 描边，点击即提交，成功 ✓ 反馈（网站 .stars 语义） */
+    private fun buildStarsRow(starsRow: LinearLayout, pick: CommunityPick) {
+        starsRow.removeAllViews()
+        val starViews = mutableListOf<org.fossify.commons.views.MyTextView>()
+        for (i in 1..5) {
+            val star = LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_star, starsRow, false) as org.fossify.commons.views.MyTextView
+            star.text = "★"
+            star.setTextColor(theme.accent)
+            star.setOnClickListener {
+                starsRow.removeAllViews()
+                val done = LayoutInflater.from(requireContext()).inflate(
+                    R.layout.item_star, starsRow, false
+                ) as org.fossify.commons.views.MyTextView
+                done.text = "✓ 感谢你的评价"
+                done.setTextColor(theme.ok)
+                done.background = null
+                starsRow.addView(done)
+                ensureBackgroundThread {
+                    val ok = org.fossify.clock.helpers.CommunityRemoteStore.rate(pick.id, i)
+                    activity?.runOnUiThread {
+                        if (!isAdded) {
+                            return@runOnUiThread
+                        }
+                        if (ok) {
+                            RelaxStore.rateCommunityPick(requireContext(), pick.id, i)
+                        } else {
+                            requireContext().toast(R.string.community_cloud_failed)
+                        }
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            if (isAdded && currentSection == Section.PICKS) {
+                                populateSection(Section.PICKS, fromCloud = true)
+                            }
+                        }, 1500)
+                    }
+                }
+            }
+            starViews.add(star)
+            starsRow.addView(star)
+        }
     }
 
     /** Shared "save to My favorites" action behind both pick lists; urlKey
@@ -537,34 +722,6 @@ class RelaxFragment : Fragment() {
         }
     }
 
-    private fun showRateDialog(pick: CommunityPick) {
-        val labels = (1..5).map { "★ $it" }.toTypedArray()
-        val current = pick.ratings?.lastOrNull() ?: 0
-
-        requireActivity().getAlertDialogBuilder()
-            .setTitle(R.string.rate_prompt)
-            .setSingleChoiceItems(labels, current - 1) { dialog, which ->
-                dialog?.dismiss()
-                ensureBackgroundThread {
-                    val ok = org.fossify.clock.helpers.CommunityRemoteStore.rate(
-                        pick.id, which + 1
-                    )
-                    activity?.runOnUiThread {
-                        if (!isAdded) {
-                            return@runOnUiThread
-                        }
-                        if (ok) {
-                            RelaxStore.rateCommunityPick(requireContext(), pick.id, which + 1)
-                        } else {
-                            requireContext().toast(R.string.community_cloud_failed)
-                        }
-                        populateSection(Section.PICKS, fromCloud = true)
-                    }
-                }
-            }
-            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
-            .show()
-    }
 
     private fun showRecommendDialog() {
         val holder = LinearLayout(requireContext()).apply {

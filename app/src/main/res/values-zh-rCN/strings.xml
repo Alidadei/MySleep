@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_launcher_name">睡眠站台</string>
+    <string name="brand_subtitle">致失眠焦虑刷手机的你：这里是刷着刷着能让你睡着的地方</string>
     <string name="time_zone">时区</string>
     <string name="vibrate">振动</string>
     <string name="no_days_selected">未选择哪一天</string>

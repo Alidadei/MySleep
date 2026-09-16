@@ -64,6 +64,7 @@
             android:padding="18dp">
 
             <org.fossify.commons.views.MyTextView
+                android:id="@+id/night_talk_daily_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/night_talk_daily_label"
@@ -91,6 +92,7 @@
             android:padding="18dp">
 
             <org.fossify.commons.views.MyTextView
+                android:id="@+id/night_talk_profile_label_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/night_talk_profile_label"
@@ -115,6 +117,7 @@
         </LinearLayout>
 
         <org.fossify.commons.views.MyTextView
+            android:id="@+id/night_talk_notes_label_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
@@ -147,6 +150,7 @@
             android:text="@string/night_talk_add_note" />
 
         <org.fossify.commons.views.MyTextView
+            android:id="@+id/night_talk_matching_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"

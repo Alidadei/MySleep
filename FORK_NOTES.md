@@ -237,6 +237,23 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   网站真实评分/社区数据与 APP 的实时互通仍属 P1（Supabase）范围
 - 21 项测试全绿
 
+## v1.3.9 社区云端互通（Supabase）+ UI 夜航化
+- **社区推荐接 Supabase**（P1 落地）：新 `CommunityRemoteStore`，与网站
+  SupabaseStore 调用契约逐字对齐（同项目、同 PostgREST 路径、同 headers、
+  同合并/打分语义）。数据流：进入精选页先渲染本地缓存 → 后台拉云端
+  （按 url 小写去重、保留 recommend_count 最大行）→ 覆盖缓存并重渲染；
+  失败静默回退缓存（离线可用）。提交与评分直写云端（同 URL 提交
+  recommend_count+1；打分=读回 ratings 追加后整体 PATCH），失败 toast
+  "网络不可用，未能同步到云端"
+- CommunityPick 增 `recommendCount`（云端列 recommend_count，契约字段同步）
+- **UI 夜航化**（按《网站审美规范.md》第 12 节）：卡片圆角 16→14；
+  类型 chips 换夜航样式（激活=暮紫实底白字、未激活=卡底描边雾蓝字、圆角 16dp，
+  Material Chip 换自绘 TextView——ChipGroup 锁 Chip 子类）；精选页顶部
+  去掉重复的"精选推荐"标题（站主要求）
+- APP 色板与网站夜航色板本就同源（#0d0f1a/#151a2c/#2b3152/#e7c97f/#4e57a5），
+  本次是参数级对齐
+- 21 项测试全绿
+
 ## 可靠性说明（重要）
 - **完全关机（长按电源键关机）后，任何第三方 APP 都无法被唤醒**——RTC 硬件闹钟只有
   厂商系统级时钟可用，这是硬件/系统层限制。可用的替代：部分机型自带"定时开机"；

@@ -47,6 +47,7 @@ class NightTalkActivity : SimpleActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        applyNightTheme()
 
         binding.nightTalkHour.text = getString(
             R.string.night_talk_hour_fmt, NightTalk.currentHourLabel()
@@ -66,7 +67,7 @@ class NightTalkActivity : SimpleActivity() {
         refreshNotes()
     }
 
-    private fun handleExport(uri: Uri) {
+    private fun handleExport(uri: android.net.Uri) {
         toast(
             if (RelaxDataIO.writeToUri(RelaxDataIO.KIND_NOTES, this, uri)) {
                 R.string.relax_export_ok
@@ -76,7 +77,7 @@ class NightTalkActivity : SimpleActivity() {
         )
     }
 
-    private fun handleImport(uri: Uri) {
+    private fun handleImport(uri: android.net.Uri) {
         ensureBackgroundThread {
             val added = RelaxDataIO.mergeFromUri(RelaxDataIO.KIND_NOTES, this, uri)
             runOnUiThread {
@@ -90,6 +91,28 @@ class NightTalkActivity : SimpleActivity() {
                 }
             }
         }
+    }
+
+    /** 时辰主题（与网站同步：夜藕荷紫×昼琥珀棕）+ 手写体 */
+    private fun applyNightTheme() {
+        val theme = org.fossify.clock.helpers.TimeTheme.current()
+        findViewById<android.view.ViewGroup>(android.R.id.content).setBackgroundColor(theme.bg)
+        binding.nightTalkHour.setTextColor(theme.accent)
+        binding.nightTalkLine.setTextColor(theme.ink)
+        binding.nightTalkProfile.setTextColor(theme.ink)
+        binding.nightTalkNotesEmpty.setTextColor(theme.sub)
+        binding.nightTalkDailyLabel.setTextColor(theme.sub)
+        binding.nightTalkProfileLabelText.setTextColor(theme.sub)
+        binding.nightTalkNotesLabelText.setTextColor(theme.sub)
+        binding.nightTalkMatchingHint.setTextColor(theme.sub)
+
+        val hand = try {
+            android.graphics.Typeface.createFromAsset(assets, "fonts/ma_shan_zheng.ttf")
+        } catch (e: Exception) {
+            android.graphics.Typeface.SERIF
+        }
+        binding.nightTalkHour.typeface = hand
+        binding.nightTalkLine.typeface = hand
     }
 
     private fun refreshProfile() {

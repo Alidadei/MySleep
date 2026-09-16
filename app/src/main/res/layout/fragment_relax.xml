@@ -3,26 +3,88 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- hub: entry cards -->
+    <!-- 整页天空：夜=星空画布（银河/星云/闪烁星/流星），昼=暖渐变+太阳；随时辰插值交叉淡化 -->
+    <org.fossify.clock.views.StarSkyView
+        android:id="@+id/relax_sky"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <ScrollView
         android:id="@+id/relax_hub"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:paddingTop="24dp">
 
         <LinearLayout
+            android:id="@+id/relax_hub_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="16dp"
-            android:paddingTop="16dp"
             android:paddingEnd="16dp"
             android:paddingBottom="24dp">
 
+            <!-- 品牌区：夜月昼日 + 手写体品牌 + 渐变短线 + 楷体副标题（复刻网站 .brand） -->
+            <LinearLayout
+                android:id="@+id/relax_brand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingTop="10dp"
+                android:paddingBottom="6dp">
+
+                <FrameLayout
+                    android:layout_width="26dp"
+                    android:layout_height="26dp">
+
+                    <ImageView
+                        android:id="@+id/brand_moon"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@string/app_launcher_name"
+                        android:src="@drawable/ic_brand_moon" />
+
+                    <ImageView
+                        android:id="@+id/brand_sun"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:alpha="0"
+                        android:contentDescription="@string/app_launcher_name"
+                        android:src="@drawable/ic_brand_sun" />
+                </FrameLayout>
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/brand_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/app_launcher_name"
+                    android:textSize="30sp" />
+
+                <View
+                    android:id="@+id/brand_line"
+                    android:layout_width="48dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="12dp" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/brand_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="@string/brand_subtitle"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <!-- 入口卡片流（hub） -->
             <LinearLayout
                 android:id="@+id/card_favorites"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
                 android:background="@drawable/bg_card_rounded"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
@@ -63,7 +125,7 @@
                 android:id="@+id/card_picks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_card_rounded"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
@@ -104,7 +166,7 @@
                 android:id="@+id/card_report"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_card_rounded"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
@@ -146,7 +208,7 @@
                 android:id="@+id/card_night_talk"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_card_rounded"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
@@ -185,12 +247,13 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- section: opened after tapping a card -->
+    <!-- section：点卡片后展开（榜单/收藏列表） -->
     <ScrollView
         android:id="@+id/relax_section"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
+        android:paddingTop="24dp"
         android:visibility="gone">
 
         <LinearLayout
@@ -227,48 +290,38 @@
                     android:textColor="@color/relax_text_primary"
                     android:textSize="@dimen/bigger_text_size" />
 
-                <com.google.android.material.button.MaterialButton
+                <org.fossify.commons.views.MyTextView
                     android:id="@+id/relax_import_data"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
+                    android:background="?attr/selectableItemBackground"
                     android:maxLines="1"
-                    android:minWidth="0dp"
+                    android:padding="8dp"
                     android:text="@string/relax_import_data"
+                    android:textColor="@color/relax_text_secondary"
                     android:textSize="13sp" />
 
-                <com.google.android.material.button.MaterialButton
+                <org.fossify.commons.views.MyTextView
                     android:id="@+id/relax_export_data"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
+                    android:background="?attr/selectableItemBackground"
                     android:maxLines="1"
-                    android:minWidth="0dp"
+                    android:padding="8dp"
                     android:text="@string/relax_export_data"
+                    android:textColor="@color/relax_text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <HorizontalScrollView
-                android:id="@+id/relax_type_chips_scroll"
+            <LinearLayout
+                android:id="@+id/relax_type_chips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:scrollbars="none"
-                android:visibility="gone"
-                xmlns:app="http://schemas.android.com/apk/res-auto">
-
-                <LinearLayout
-                    android:id="@+id/relax_type_chips"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingEnd="8dp" />
-            </HorizontalScrollView>
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/relax_holder"
