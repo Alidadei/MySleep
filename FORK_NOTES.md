@@ -210,6 +210,22 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
   默认昵称"未寝人####"、AdGuard 词表（拦截对象本就是中文广告话术）、
   RingDiagnostics 排障日志（面向排障场景）
 
+## v1.3.7 收藏功能增强（《收藏功能增强计划.md》增强项 1+2）
+- **精选/社区条目一键收藏**：社区条目长按从直接弹评分改为选项弹窗（★ 评分 /
+  收藏到我的收藏）；样例条目新增长按收藏；命中已有收藏（urlKey 判重）提示
+  "已在收藏中"，成功提示"已收藏"
+- **urlKey 跨端去重键**：`RelaxStore.urlKey()` 与网站 urlKey() 逐字对齐——
+  normalizeUrl → host 去 www.（小写、默认端口剔除）→ path 去尾斜杠 → 保留
+  query、丢弃 fragment；解析失败退化为 trim+小写原串（同 JS catch 分支）。
+  mergeCustomItems/mergeCommunityPicks/手动添加查重全部切换为 urlKey 判重；
+  存量数据现算无需迁移。这是将来两端收藏互通的硬前置
+- 新增 `RelaxStoreTest`（10 测）：尾斜杠/www./host 大小写/query 参与/fragment
+  丢弃/根域名/非 http 归一化等价类 + merge 判重 + isUrlFavorited。
+  全套 21 项测试全绿（6 冒烟 + 5 AdGuard + 10 RelaxStore）
+- 实现注记：JS URL.host 含端口且小写化、pathname 恒以 / 开头——Kotlin 侧用
+  android Uri 对齐（host 手动 lowercase、encodedQuery 手动补 ?、默认端口剔除）
+- 计划中的增强项 3（手动收藏补类型标签，P1）与"明确不做"边界维持原样
+
 ## 可靠性说明（重要）
 - **完全关机（长按电源键关机）后，任何第三方 APP 都无法被唤醒**——RTC 硬件闹钟只有
   厂商系统级时钟可用，这是硬件/系统层限制。可用的替代：部分机型自带"定时开机"；

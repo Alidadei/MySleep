@@ -269,6 +269,41 @@ class RelaxFragment : Fragment() {
         binding.relaxHolder.addView(label)
     }
 
+    /** True when this row lives in a list where the bookmark toggle applies
+     *  (curated picks & community picks - not the user's own favorites). */
+    private fun bindBookmarkButton(row: LinearLayout, url: String) {
+        val favButton = row.findViewById<android.widget.ImageView>(R.id.relax_item_fav)
+        val accent = requireContext().getColor(R.color.color_accent)
+        val secondary = requireContext().getColor(R.color.relax_text_secondary)
+
+        fun refresh() {
+            val favorited = RelaxStore.isUrlFavorited(requireContext(), url)
+            favButton.setImageResource(
+                if (favorited) R.drawable.ic_bookmark_filled_vector
+                else R.drawable.ic_bookmark_vector
+            )
+            favButton.applyColorFilter(if (favorited) accent else secondary)
+        }
+        refresh()
+
+        favButton.setOnClickListener {
+            if (RelaxStore.isUrlFavorited(requireContext(), url)) {
+                RelaxStore.getCustomItems(requireContext())
+                    .filter { RelaxStore.urlKey(it.url) == RelaxStore.urlKey(url) }
+                    .forEach { RelaxStore.removeCustomItem(requireContext(), it.id) }
+                requireContext().toast(R.string.relax_favorite_removed)
+            } else {
+                val title = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_title)
+                    .text
+                    .removePrefix(getString(R.string.relax_sample_badge))
+                    .toString()
+                RelaxStore.addCustomItem(requireContext(), title, url)
+                requireContext().toast(R.string.relax_favorite_done)
+            }
+            refresh()
+        }
+    }
+
     private fun addItemRow(item: RelaxItem, deletable: Boolean, favoriteOnLongPress: Boolean = false) {
         val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
@@ -299,6 +334,7 @@ class RelaxFragment : Fragment() {
         }
 
         if (favoriteOnLongPress) {
+            bindBookmarkButton(row, item.url)
             row.setOnLongClickListener {
                 favoriteFromPick(item.title, item.url)
                 true
@@ -442,6 +478,7 @@ class RelaxFragment : Fragment() {
             }
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }
+        bindBookmarkButton(row, pick.url)
         row.setOnLongClickListener {
             val options = arrayOf(
                 getString(R.string.relax_action_rate),
@@ -663,7 +700,9 @@ class RelaxFragment : Fragment() {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
             } else {
-                Intent(Intent.ACTION_VIEW, item.url.toUri())
+                // normalize first: imports (e.g. website favorites) may store
+                // bare urlKey strings without the https:// scheme
+                Intent(Intent.ACTION_VIEW, RelaxStore.normalizeUrl(item.url).toUri())
             }
             startActivity(intent)
         } catch (e: Exception) {

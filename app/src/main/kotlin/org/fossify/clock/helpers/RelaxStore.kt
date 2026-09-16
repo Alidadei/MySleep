@@ -151,7 +151,10 @@ object RelaxStore {
         }
     }
 
-    /** Merge imported favorites (same ids or same urlKeys are skipped). Returns added count. */
+    /** Merge imported favorites (same ids or same urlKeys are skipped). Returns added count.
+     *  Imported urls are normalized (protocol added) so entries exported from
+     *  the website's favorites - which may store bare urlKey strings - stay
+     *  openable on the phone. */
     fun mergeCustomItems(context: Context, imported: List<RelaxItem>): Int {
         val items = getCustomItems(context)
         val knownIds = items.map { it.id }.toSet()
@@ -159,6 +162,8 @@ object RelaxStore {
         val fresh = imported.filter {
             it.title.isNotBlank() && it.url.isNotBlank() &&
                 it.id !in knownIds && urlKey(it.url) !in knownUrlKeys
+        }.map {
+            it.copy(url = normalizeUrl(it.url))
         }
         if (fresh.isNotEmpty()) {
             saveItems(context, items + fresh)
@@ -174,6 +179,8 @@ object RelaxStore {
         val fresh = imported.filter {
             it.title.isNotBlank() && it.url.isNotBlank() &&
                 it.id !in knownIds && urlKey(it.url) !in knownUrlKeys
+        }.map {
+            it.copy(url = normalizeUrl(it.url))
         }
         if (fresh.isNotEmpty()) {
             saveCommunityPicks(context, picks + fresh)
