@@ -128,10 +128,13 @@ class StarSkyView @JvmOverloads constructor(
         }
         paint.shader = null
 
-        // 尘埃星 170（静态层）
+        // 尘埃星 170（静态层）——网站 fillRect(x,y,w,h) 是 0.2–0.7px 微尘
         for (i in 0 until 170) {
-            paint.color = Color.argb((0.08f + rand() * 0.25f * 255).toInt().coerceIn(0, 255), 205, 196, 235)
-            g.drawRect(rand() * w, rand() * h, rand() * w + 0.2f + rand() * 0.5f, rand() * h + 0.2f + rand() * 0.5f, paint)
+            paint.color = Color.argb(((0.08f + rand() * 0.25f) * 255f).toInt().coerceIn(0, 255), 205, 196, 235)
+            val dx = rand() * w
+            val dy = rand() * h
+            val size = 0.2f + rand() * 0.5f
+            g.drawRect(dx, dy, dx + size, dy + size, paint)
         }
 
         // 闪烁星四层

@@ -268,7 +268,7 @@ class RelaxFragment : Fragment() {
         )
         // 站主定稿：精选页顶部不再重复"精选推荐"字样
         binding.relaxSectionTitle.beGoneIf(section == Section.PICKS)
-        binding.relaxTypeChips.beVisibleIf(section == Section.PICKS)
+        binding.relaxTypeChipsScroll.beVisibleIf(section == Section.PICKS)
         if (section == Section.PICKS && !chipsBuilt) {
             buildTypeChips()
         }
@@ -332,6 +332,8 @@ class RelaxFragment : Fragment() {
             binding.relaxEmptyCustom.beGone()
             binding.relaxAddFavorite.beGone()
             binding.relaxRecommend.beVisible()
+            // 防按钮抢占焦点把 ScrollView 滚到中部（出现"中间空白"）
+            binding.relaxSection.scrollTo(0, 0)
             if (!fromCloud) {
                 refreshCommunityFromCloud()
             }

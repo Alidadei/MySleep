@@ -314,14 +314,20 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/relax_type_chips"
+            <HorizontalScrollView
+                android:id="@+id/relax_type_chips_scroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal"
-                android:visibility="gone" />
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/relax_type_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
 
             <LinearLayout
                 android:id="@+id/relax_holder"
