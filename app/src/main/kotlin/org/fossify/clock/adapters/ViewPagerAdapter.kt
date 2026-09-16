@@ -32,7 +32,7 @@ class ViewPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 
     override fun getCount() = TABS_COUNT
 
-    private fun getFragment(position: Int) = when (position) {
+    private fun getFragment(position: Int): Fragment = when (position) {
         TAB_RELAX_INDEX -> RelaxFragment()
         TAB_ALARM_INDEX -> AlarmFragment()
         TAB_TIMER_INDEX -> TimerFragment()

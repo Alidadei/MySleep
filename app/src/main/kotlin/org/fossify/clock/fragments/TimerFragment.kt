@@ -31,7 +31,14 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-class TimerFragment : Fragment() {
+class TimerFragment : TimeThemeAware,
+     Fragment() {
+    override fun applyTimeTheme(theme: org.fossify.clock.helpers.TimeTheme) {
+        view?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        if (this::timerAdapter.isInitialized) {
+            timerAdapter.updateTimeTheme(theme.ink, theme.act, theme.bg)
+        }
+    }
     companion object {
         private const val INVALID_POSITION = -1
     }

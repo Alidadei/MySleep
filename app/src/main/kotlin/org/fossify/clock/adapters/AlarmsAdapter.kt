@@ -39,6 +39,18 @@ class AlarmsAdapter(
     itemClick: (Any) -> Unit,
 ) : MyRecyclerViewAdapter(activity, recyclerView, itemClick), ItemTouchHelperContract {
 
+    /** 时辰主题覆盖色（网站同款）；null 时回落上游主题色 */
+    private var themeText: Int? = null
+    private var themeAccent: Int? = null
+    private var themeBg: Int? = null
+
+    fun updateTimeTheme(text: Int, accent: Int, bg: Int) {
+        themeText = text
+        themeAccent = accent
+        themeBg = bg
+        notifyDataSetChanged()
+    }
+
     private var startReorderDragListener: StartReorderDragListener
 
     init {
@@ -134,10 +146,13 @@ class AlarmsAdapter(
     @SuppressLint("ClickableViewAccessibility")
     private fun setupView(view: View, alarm: Alarm, holder: ViewHolder) {
         val isSelected = selectedKeys.contains(alarm.id)
+        val effText = themeText ?: textColor
+        val effAccent = themeAccent ?: properPrimaryColor
+        val effBg = themeBg ?: backgroundColor
         ItemAlarmBinding.bind(view).apply {
             alarmHolder.isSelected = isSelected
             alarmDragHandle.beVisibleIf(selectedKeys.isNotEmpty())
-            alarmDragHandle.applyColorFilter(textColor)
+            alarmDragHandle.applyColorFilter(effText)
             alarmDragHandle.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     startReorderDragListener.requestDrag(holder)
@@ -149,17 +164,17 @@ class AlarmsAdapter(
                 showSeconds = false,
                 makeAmPmSmaller = true
             )
-            alarmTime.setTextColor(textColor)
+            alarmTime.setTextColor(effText)
 
             alarmDays.text = getAlarmSelectedDaysString(alarm)
-            alarmDays.setTextColor(textColor)
+            alarmDays.setTextColor(effText)
 
             alarmLabel.text = alarm.label
-            alarmLabel.setTextColor(textColor)
+            alarmLabel.setTextColor(effText)
             alarmLabel.beVisibleIf(alarm.label.isNotEmpty())
 
             alarmSwitch.isChecked = alarm.isEnabled
-            alarmSwitch.setColors(textColor, properPrimaryColor, backgroundColor)
+            alarmSwitch.setColors(effText, effAccent, effBg)
             alarmSwitch.setOnClickListener {
                 toggleAlarm(binding = this, alarm = alarm)
             }

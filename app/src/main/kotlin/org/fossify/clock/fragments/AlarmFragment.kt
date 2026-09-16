@@ -39,7 +39,14 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-class AlarmFragment : Fragment(), ToggleAlarmInterface {
+class AlarmFragment : TimeThemeAware,
+     Fragment(), ToggleAlarmInterface {
+    override fun applyTimeTheme(theme: org.fossify.clock.helpers.TimeTheme) {
+        view?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        val list = view?.findViewById<androidx.recyclerview.widget.RecyclerView>(org.fossify.clock.R.id.alarms_list)
+        (list?.adapter as? org.fossify.clock.adapters.AlarmsAdapter)
+            ?.updateTimeTheme(theme.ink, theme.act, theme.bg)
+    }
     private var alarms = ArrayList<Alarm>()
     private var currentEditAlarmDialog: EditAlarmDialog? = null
 

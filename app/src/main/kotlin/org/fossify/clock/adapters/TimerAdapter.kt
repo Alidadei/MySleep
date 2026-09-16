@@ -52,6 +52,18 @@ class TimerAdapter(
     onRefresh = onRefresh
 ), ItemTouchHelperContract {
 
+    /** 时辰主题覆盖色（网站同款）；null 时回落上游主题色 */
+    private var themeText: Int? = null
+    private var themeAccent: Int? = null
+    private var themeBg: Int? = null
+
+    fun updateTimeTheme(text: Int, accent: Int, bg: Int) {
+        themeText = text
+        themeAccent = accent
+        themeBg = bg
+        notifyDataSetChanged()
+    }
+
     private var startReorderDragListener: StartReorderDragListener
 
     companion object {
@@ -167,11 +179,14 @@ class TimerAdapter(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupView(view: View, timer: Timer, holder: ViewHolder) {
+        val effText = themeText ?: textColor
+        val effAccent = themeAccent ?: properPrimaryColor
+        val effBg = themeBg ?: backgroundColor
         ItemTimerBinding.bind(view).apply {
             val isSelected = selectedKeys.contains(timer.id)
             timerFrame.isSelected = isSelected
             timerDragHandle.beVisibleIf(selectedKeys.isNotEmpty())
-            timerDragHandle.applyColorFilter(textColor)
+            timerDragHandle.applyColorFilter(effText)
             timerDragHandle.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     startReorderDragListener.requestDrag(holder)
@@ -179,12 +194,12 @@ class TimerAdapter(
                 false
             }
 
-            timerLabel.setTextColor(textColor)
-            timerLabel.setHintTextColor(textColor.adjustAlpha(0.7f))
+            timerLabel.setTextColor(effText)
+            timerLabel.setHintTextColor(effText.adjustAlpha(0.7f))
             timerLabel.text = timer.label
             timerLabel.beVisibleIf(timer.label.isNotEmpty())
 
-            timerTime.setTextColor(textColor)
+            timerTime.setTextColor(effText)
             timerTime.text = when (timer.state) {
                 is Finished -> 0.getFormattedDuration()
                 is Idle -> timer.seconds.getFormattedDuration()
@@ -192,12 +207,12 @@ class TimerAdapter(
                 is Running -> timer.state.tick.getFormattedDuration()
             }
 
-            timerReset.applyColorFilter(textColor)
+            timerReset.applyColorFilter(effText)
             timerReset.setOnClickListener {
                 resetTimer(timer)
             }
 
-            timerPlayPause.applyColorFilter(textColor)
+            timerPlayPause.applyColorFilter(effText)
             timerPlayPause.setOnClickListener {
                 toggleTimer(timer)
             }
@@ -212,7 +227,7 @@ class TimerAdapter(
                     } else {
                         org.fossify.commons.R.drawable.ic_play_vector
                     },
-                    color = textColor
+                    color = effText
                 )
             )
         }

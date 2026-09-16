@@ -458,9 +458,33 @@ class MainActivity : SimpleActivity() {
         }
 
         binding.mainTabsHolder.getTabAt(binding.viewPager.currentItem)?.select()
-        val bottomBarColor = getBottomNavigationBackgroundColor()
-        binding.mainTabsHolder.setBackgroundColor(bottomBarColor)
+        applyTimeThemeToChrome()
     }
+
+    /** 时辰主题套壳：天空/透明 toolbar/磨砂底栏，三 tab 共用（网站 page-sky 同款） */
+    private fun applyTimeThemeToChrome(force: Boolean = false) {
+        val theme = org.fossify.clock.helpers.TimeTheme.current()
+        if (!force && lateTheme == theme) return
+        val changed = lateTheme != theme
+        lateTheme = theme
+
+        binding.mainToolbar.setTitleTextColor(theme.ink)
+        binding.mainToolbar.overflowIcon?.setTint(theme.ink)
+
+        // 磨砂底栏：半透明 card 近似（blur 需 API31+ RenderEffect 采样背后内容，暂不引依赖）
+        val frosted = android.graphics.Color.argb(179,
+            (theme.card shr 16) and 0xFF, (theme.card shr 8) and 0xFF, theme.card and 0xFF)
+        binding.mainTabsHolder.setBackgroundColor(frosted)
+
+        if (changed || force) {
+            setupTabColors()
+            supportFragmentManager.fragments
+                .filterIsInstance<org.fossify.clock.fragments.TimeThemeAware>()
+                .forEach { it.applyTimeTheme(theme) }
+        }
+    }
+
+    private var lateTheme = org.fossify.clock.helpers.TimeTheme.current()
 
     private fun getInactiveTabIndexes(activeIndex: Int): List<Int> {
         return arrayListOf(0, 1, 2).filter { it != activeIndex }

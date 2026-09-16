@@ -10,4 +10,5 @@
     <color name="relax_text_secondary">#99333333</color>
     <color name="relax_card_bg">#0F4E57A5</color>
     <color name="relax_card_stroke">#2E4E57A5</color>
+    <color name="relax_card_bg_frosted">#B3ECE1D8</color>
 </resources>
