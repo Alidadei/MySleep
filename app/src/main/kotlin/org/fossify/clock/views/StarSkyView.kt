@@ -18,7 +18,7 @@ import kotlin.random.Random
 /**
  * 整页天空 —— 复刻网站 page-sky 双层设计：
  * 夜：深空底（藕荷紫同宗径向渐变）+ 银河带两层 + 星云三团 + 尘埃星 170 +
- *     四层呼吸星（微小/中/光晕/十字芒，慢正弦呼吸灯式明暗，固定种子 20260910 可复现）+ 流星（5–11s 一颗，三成双流星）；
+ *     四层闪烁星（微小/中/光晕/十字芒，呼吸式正弦明暗逐字对齐网站，固定种子 20260910 可复现）+ 低频流星（7–16s 一颗）；
  * 昼：个人站同款暖渐变 + 太阳光晕。
  * 两层透明度随 TimeTheme.t 交叉淡化（夜星 opacity=1-t，昼空 opacity=t）。
  * 动画帧率克制（闪烁用 sin 相位，不逐帧重建），t≥0.97 时完全跳过夜空绘制（省电，同网站）。
@@ -145,12 +145,12 @@ class StarSkyView @JvmOverloads constructor(
         val medCols = arrayOf("200,215,255", "255,245,220", "180,200,255", "255,220,180")
         fun pickCol(): IntArray = starCols[(rand() * starCols.size).toInt()]
 
-        // 呼吸节奏：角速度 0.3–1.2 rad/s → 单星呼吸周期 5–20s，慢到像睡眠呼吸
+        // 闪烁星四层 —— 速度/亮度逐字对齐网站 twinkles（微小 60 轻闪 / 中 18 / 光晕 8 / 十字芒 2）
         repeat(60) {
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 0.5f + rand() * 0.8f, 0.25f + rand() * 0.35f,
-                    0.4f + rand() * 0.8f, rand() * Math.PI.toFloat() * 2,
+                    0.8f + rand() * 1.7f, rand() * Math.PI.toFloat() * 2,
                     pickCol().joinToString(","), small = true
                 )
             )
@@ -159,7 +159,7 @@ class StarSkyView @JvmOverloads constructor(
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 1f + rand() * 1.1f, 0.35f + rand() * 0.4f,
-                    0.35f + rand() * 0.75f, rand() * Math.PI.toFloat() * 2,
+                    0.8f + rand() * 1.8f, rand() * Math.PI.toFloat() * 2,
                     medCols[(rand() * medCols.size).toInt()]
                 )
             )
@@ -168,7 +168,7 @@ class StarSkyView @JvmOverloads constructor(
             twinks.add(
                 Twinkle(
                     rand() * w, rand() * h, 1.2f + rand() * 1.6f, 0.85f,
-                    0.3f + rand() * 0.6f, rand() * Math.PI.toFloat() * 2,
+                    0.4f + rand() * 1.1f, rand() * Math.PI.toFloat() * 2,
                     pickCol().joinToString(","), glow = true
                 )
             )
@@ -265,9 +265,13 @@ class StarSkyView @JvmOverloads constructor(
     private fun drawTwinkles(canvas: Canvas, w: Float, h: Float, nightAlpha: Int, dt: Float) {
         val timeSec = lastFrame / 1000f
         for (s in twinks) {
-            // 呼吸灯式明暗：纯正弦慢呼吸，不熄灭只涨落（小星 55%–100%，大星 30%–100%）
-            val breathe = 0.5f + 0.5f * sin(timeSec * s.speed + s.phase)
-            val alpha = (if (s.small) s.base * (0.55f + 0.45f * breathe) else s.base * (0.3f + 0.7f * breathe)) *
+            // 呼吸式明暗，公式逐字对齐网站（正弦涨落不熄灭：小星 50%–100%，大星 30%–100%）
+            val flick = if (s.small) {
+                0.75f + 0.25f * sin(timeSec * s.speed + s.phase)
+            } else {
+                0.5f + 0.5f * sin(timeSec * s.speed + s.phase)
+            }
+            val alpha = (if (s.small) s.base * flick else s.base * (0.3f + 0.7f * flick)) *
                 (nightAlpha / 255f)
             val col = s.col.split(",").map { it.toInt() }
             val argb = Color.argb((alpha * 255).toInt().coerceIn(0, 255), col[0], col[1], col[2])
@@ -276,14 +280,14 @@ class StarSkyView @JvmOverloads constructor(
                 val radius = s.size * 8
                 paint.shader = RadialGradient(
                     s.x, s.y, radius,
-                    Color.argb((0.2f * breathe * 255).toInt(), col[0], col[1], col[2]),
+                    Color.argb((0.2f * flick * 255).toInt(), col[0], col[1], col[2]),
                     Color.TRANSPARENT, Shader.TileMode.CLAMP
                 )
                 canvas.drawRect(s.x - radius, s.y - radius, s.x + radius, s.y + radius, paint)
                 paint.shader = null
                 paint.color = argb
                 canvas.drawCircle(s.x, s.y, s.size, paint)
-                paint.color = Color.argb((0.35f * breathe * 255).toInt(), col[0], col[1], col[2])
+                paint.color = Color.argb((0.35f * flick * 255).toInt(), col[0], col[1], col[2])
                 paint.strokeWidth = 0.8f
                 val len = s.size * 6
                 canvas.drawLine(s.x - len, s.y, s.x + len, s.y, paint)
@@ -292,7 +296,7 @@ class StarSkyView @JvmOverloads constructor(
                 val radius = s.size * 5
                 paint.shader = RadialGradient(
                     s.x, s.y, radius,
-                    Color.argb((0.22f * breathe * 255).toInt(), col[0], col[1], col[2]),
+                    Color.argb((0.22f * flick * 255).toInt(), col[0], col[1], col[2]),
                     Color.TRANSPARENT, Shader.TileMode.CLAMP
                 )
                 canvas.drawRect(s.x - radius, s.y - radius, s.x + radius, s.y + radius, paint)
@@ -305,24 +309,21 @@ class StarSkyView @JvmOverloads constructor(
             }
         }
 
-        // 流星：温和常客（5–11s 一颗，三成概率同波双流星）
+        // 流星：低频温和（7–16s 一颗，逐字对齐网站）
         paint.shader = null
         if (dt > 0) {
             shootTimer -= dt
             if (shootTimer <= 0) {
-                shootTimer = 5f + Random.nextFloat() * 6f
-                val count = if (Random.nextFloat() < 0.3f) 2 else 1
-                repeat(count) {
-                    val angle = 0.3f + Random.nextFloat() * 0.5f
-                    val speed = 240f + Random.nextFloat() * 200f
-                    shooters.add(
-                        Shooter(
-                            w * 0.1f + Random.nextFloat() * w * 0.65f, Random.nextFloat() * h * 0.35f,
-                            cos(angle) * speed, sin(angle) * speed,
-                            1f, 0.55f + Random.nextFloat() * 0.3f, 34f + Random.nextFloat() * 46f
-                        )
+                shootTimer = 7f + Random.nextFloat() * 9f
+                val angle = 0.3f + Random.nextFloat() * 0.5f
+                val speed = 240f + Random.nextFloat() * 200f
+                shooters.add(
+                    Shooter(
+                        w * 0.1f + Random.nextFloat() * w * 0.65f, Random.nextFloat() * h * 0.35f,
+                        cos(angle) * speed, sin(angle) * speed,
+                        1f, 0.55f + Random.nextFloat() * 0.3f, 34f + Random.nextFloat() * 46f
                     )
-                }
+                )
             }
             for (k in shooters.indices.reversed()) {
                 val s = shooters[k]

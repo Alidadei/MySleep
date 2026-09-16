@@ -155,8 +155,85 @@ class NightTalkActivity : SimpleActivity() {
         }
     }
 
+    /** 夜话自己的编辑画像：昵称 + 失眠四型 + 生辰（本地匹配字段；研究画像归 hub 的填写用户信息卡） */
     private fun showProfileDialog() {
-        org.fossify.clock.helpers.ProfileDialogs.show(this) { refreshProfile() }
+        val profile = NightTalk.getProfile(this)
+        val pad = resources.displayMetrics.widthPixels / 12
+
+        val holder = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, 40, pad, 0)
+        }
+        val nicknameInput = EditText(this).apply {
+            hint = getString(R.string.night_talk_nickname_hint)
+            setText(profile.nickname)
+        }
+        val birthInput = EditText(this).apply {
+            hint = getString(R.string.night_talk_birth_hint)
+            if (profile.birthYear > 0) {
+                setText("${profile.birthYear}-${profile.birthMonth}-${profile.birthDay}")
+            }
+        }
+        holder.addView(nicknameInput)
+        holder.addView(birthInput)
+
+        val typeLabels = InsomniaTypes.types.map { getString(it.labelRes) }.toTypedArray()
+        val currentTypeIndex = InsomniaTypes.types
+            .indexOfFirst { it.key == profile.insomniaType }
+            .coerceAtLeast(-1)
+        var selectedType = if (currentTypeIndex >= 0) currentTypeIndex else -1
+
+        getAlertDialogBuilder()
+            .setTitle(R.string.night_talk_edit_profile)
+            .setSingleChoiceItems(typeLabels, selectedType) { _, which ->
+                selectedType = which
+            }
+            .setView(holder)
+            .setPositiveButton(org.fossify.commons.R.string.ok) { _, _ ->
+                val birthParts = birthInput.text.toString().trim().split("-")
+                var y = 0
+                var m = 0
+                var d = 0
+                if (birthParts.size == 3) {
+                    y = birthParts[0].toIntOrNull() ?: 0
+                    m = birthParts[1].toIntOrNull() ?: 0
+                    d = birthParts[2].toIntOrNull() ?: 0
+                }
+                val nickname = nicknameInput.text.toString().trim()
+                    .ifEmpty { profile.nickname }
+                NightTalk.saveProfile(
+                    this,
+                    NightTalk.SleepProfile(
+                        nickname = nickname,
+                        insomniaType = if (selectedType >= 0) {
+                            InsomniaTypes.types[selectedType].key
+                        } else {
+                            profile.insomniaType
+                        },
+                        birthYear = y,
+                        birthMonth = m,
+                        birthDay = d,
+                        ageGroup = profile.ageGroup,
+                        gender = profile.gender,
+                        education = profile.education
+                    )
+                )
+                // 昵称变了就同步云端画像（研究字段原样带上），失败静默
+                val uid = NightTalk.getUid(this)
+                val ageGroup = profile.ageGroup
+                val gender = profile.gender
+                val education = profile.education
+                Thread {
+                    try {
+                        org.fossify.clock.helpers.CommunityRemoteStore
+                            .upsertProfile(uid, nickname, ageGroup, gender, education)
+                    } catch (e: Exception) {
+                    }
+                }.start()
+                refreshProfile()
+            }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+            .show()
     }
 
     private fun showAddNoteDialog() {

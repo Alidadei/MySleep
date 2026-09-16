@@ -191,6 +191,9 @@
     <string name="dead_reported">Feedback received (duplicates counted once)</string>
     <string name="dead_report_fail">Failed to report, try again later</string>
     <string name="dead_badge">⚠ Reported by many</string>
+    <string name="profile_nick_ph">Call me… (optional)</string>
+    <string name="profile_save">Save profile</string>
+    <string name="profile_saved">Saved ✓</string>
     <string name="profile_age_label">Age</string>
     <string name="profile_gender_label">Gender</string>
     <string name="profile_edu_label">Education</string>
