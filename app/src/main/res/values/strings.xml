@@ -187,6 +187,10 @@
     <string name="night_talk_profile_label">Sleep profile</string>
     <string name="night_talk_type_unset">type unknown</string>
     <string name="relax_profile_entry">User info</string>
+    <string name="dead_report_tip">Link dead? Report it</string>
+    <string name="dead_reported">Feedback received (duplicates counted once)</string>
+    <string name="dead_report_fail">Failed to report, try again later</string>
+    <string name="dead_badge">⚠ Reported by many</string>
     <string name="profile_age_label">Age</string>
     <string name="profile_gender_label">Gender</string>
     <string name="profile_edu_label">Education</string>

@@ -51,6 +51,23 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
+        <!-- 链接失效举报（仅社区条目；已举报/多人报告染 bad 色，复刻网站 .card .dead） -->
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/relax_item_dead"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_ghost_button"
+            android:contentDescription="@string/dead_report_tip"
+            android:paddingStart="10dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="2dp"
+            android:text="⚠"
+            android:textColor="@color/relax_text_primary"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
         <ImageView
             android:id="@+id/relax_item_fav"
             android:layout_width="36dp"

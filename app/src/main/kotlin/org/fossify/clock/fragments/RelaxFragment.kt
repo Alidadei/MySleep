@@ -54,12 +54,20 @@ class RelaxFragment : Fragment(), TimeThemeAware {
 
     private enum class Section { FAVORITES, PICKS }
 
+    companion object {
+        /** 网站同款 DEAD_THRESHOLD：≥2 人举报同一链接即判失效 */
+        private const val DEAD_THRESHOLD = 2
+    }
+
     private lateinit var binding: FragmentRelaxBinding
     private var currentSection = Section.FAVORITES
     private var selectedType = InsomniaTypes.KEY_ALL
     private var chipsBuilt = false
     private var theme = TimeTheme.current()
     private var handTf: Typeface? = null
+
+    /** 链接失效举报缓存（网站同款语义：≥2 人举报置灰+多人报告徽标；拉取失败保留旧值） */
+    private val deadReports = mutableListOf<CommunityRemoteStore.DeadReport>()
 
     private var ioKind = RelaxDataIO.KIND_FAVORITES
 
@@ -325,21 +333,42 @@ class RelaxFragment : Fragment(), TimeThemeAware {
         binding.relaxRecommend.beGone()
     }
 
-    /** Cloud refresh: fetch authoritative community picks from Supabase,
-     *  replace the local cache and re-render. Silent on failure (offline
-     *  keeps serving the cache). */
+    /** Cloud refresh: fetch authoritative community picks + dead-link reports
+     *  from Supabase, replace the local cache and re-render. Silent on failure
+     *  (offline keeps serving the cache and the previous report marks). */
     private fun refreshCommunityFromCloud() {
         ensureBackgroundThread {
-            val remote = CommunityRemoteStore.load() ?: return@ensureBackgroundThread
-            if (remote.isNotEmpty()) {
+            val remote = CommunityRemoteStore.load()
+            if (remote != null && remote.isNotEmpty()) {
                 RelaxStore.replaceAllCommunityPicks(requireContext(), remote)
             }
+            val reports = CommunityRemoteStore.fetchDeadReports()
             activity?.runOnUiThread {
-                if (isAdded && currentSection == Section.PICKS) {
+                if (reports != null) {
+                    deadReports.clear()
+                    deadReports.addAll(reports)
+                }
+                if (isAdded && currentSection == Section.PICKS &&
+                    (remote != null || reports != null)
+                ) {
                     populateSection(Section.PICKS, fromCloud = true)
                 }
             }
         }
+    }
+
+    /** 网站同款 deadInfo：该链接的举报数 + 我是否已举报（uid 来自画像匿名标识） */
+    private fun deadInfo(pickId: Long): Pair<Int, Boolean> {
+        val uid = NightTalk.getUid(requireContext())
+        var n = 0
+        var me = false
+        for (r in deadReports) {
+            if (r.pickId == pickId.toString()) {
+                n++
+                if (r.uid == uid) me = true
+            }
+        }
+        return n to me
     }
 
     private fun refreshReportSubtitle() {
@@ -497,22 +526,35 @@ class RelaxFragment : Fragment(), TimeThemeAware {
         val typePrefix = typeLabel.ifEmpty { "" }
         // 站主要求：推荐次数始终展示
         val recText = " · ${pick.recommendCount ?: 1} 人推荐"
-        row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
-            .apply {
-                text = when {
-                    !ratings.isNullOrEmpty() -> {
-                        val ratingText = getString(
-                            R.string.community_rating_fmt, ratings.average(), ratings.size
-                        )
-                        (if (typePrefix.isEmpty()) "" else "$typePrefix · ") + ratingText + recText
-                    }
-
-                    typePrefix.isNotEmpty() -> "$typePrefix · ${pick.url}$recText"
-
-                    else -> pick.url + recText
-                }
-                setTextColor(theme.sub)
+        val metaText = when {
+            !ratings.isNullOrEmpty() -> {
+                val ratingText = getString(
+                    R.string.community_rating_fmt, ratings.average(), ratings.size
+                )
+                (if (typePrefix.isEmpty()) "" else "$typePrefix · ") + ratingText + recText
             }
+
+            typePrefix.isNotEmpty() -> "$typePrefix · ${pick.url}$recText"
+
+            else -> pick.url + recText
+        }
+        val urlView = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_url)
+        urlView.setTextColor(theme.sub)
+        // 网站同款失效判定：≥2 人举报 → 卡片置灰 + 红色「多人报告」徽标（dead-tag）
+        val (reportCount, _) = deadInfo(pick.id)
+        if (reportCount >= DEAD_THRESHOLD) {
+            row.alpha = 0.6f
+            val badge = "  " + getString(R.string.dead_badge)
+            urlView.text = android.text.SpannableString(metaText + badge).apply {
+                setSpan(
+                    android.text.style.ForegroundColorSpan(theme.bad),
+                    metaText.length, metaText.length + badge.length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        } else {
+            urlView.text = metaText
+        }
 
         // ghost rate 按钮：展开行内五星（网站 .card .rate + .stars）
         val rateBtn = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_rate)
@@ -526,6 +568,37 @@ class RelaxFragment : Fragment(), TimeThemeAware {
             }
             starsRow.visibility =
                 if (starsRow.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+
+        // ⚠ 链接失效举报（网站 .card .dead；一人一票，服务端 (pick_id,uid) 唯一去重）
+        val deadBtn = row.findViewById<org.fossify.commons.views.MyTextView>(R.id.relax_item_dead)
+        deadBtn.visibility = View.VISIBLE
+        fun refreshDead() {
+            val (_, me) = deadInfo(pick.id)
+            val color = if (me) theme.bad else theme.grey
+            deadBtn.setTextColor(color)
+            deadBtn.background.setTint(if (me) theme.bad else theme.line)
+        }
+        refreshDead()
+        deadBtn.setOnClickListener {
+            val (_, me) = deadInfo(pick.id)
+            if (me) return@setOnClickListener
+            deadBtn.isEnabled = false
+            ensureBackgroundThread {
+                val uid = NightTalk.getUid(requireContext())
+                val ok = CommunityRemoteStore.reportDead(pick.id, uid)
+                activity?.runOnUiThread {
+                    if (!isAdded) return@runOnUiThread
+                    deadBtn.isEnabled = true
+                    if (ok) {
+                        deadReports.add(CommunityRemoteStore.DeadReport(pick.id.toString(), uid))
+                        requireContext().toast(R.string.dead_reported)
+                    } else {
+                        requireContext().toast(R.string.dead_report_fail)
+                    }
+                    refreshDead()
+                }
+            }
         }
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }

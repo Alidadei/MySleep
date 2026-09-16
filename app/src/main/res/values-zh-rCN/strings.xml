@@ -181,6 +181,10 @@
     <string name="night_talk_profile_label">睡眠画像</string>
     <string name="night_talk_type_unset">类型未定</string>
     <string name="relax_profile_entry">填写用户信息</string>
+    <string name="dead_report_tip">链接打不开？报告失效</string>
+    <string name="dead_reported">已收到反馈（重复只计一次）</string>
+    <string name="dead_report_fail">上报失败，请稍后再试</string>
+    <string name="dead_badge">⚠ 多人报告</string>
     <string name="profile_age_label">年龄</string>
     <string name="profile_gender_label">性别</string>
     <string name="profile_edu_label">学历</string>

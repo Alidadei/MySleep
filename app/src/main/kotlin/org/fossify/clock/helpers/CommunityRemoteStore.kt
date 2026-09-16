@@ -142,6 +142,37 @@ object CommunityRemoteStore {
         ) != null
     }
 
+    /** 链接失效举报行（网站 link_reports：(pick_id, uid) 唯一 → 一人一票自动去重） */
+    data class DeadReport(val pickId: String, val uid: String)
+
+    /** 上报链接失效，契约同网站 SupabaseStore.reportDead。失败静默返回 false。 */
+    fun reportDead(pickId: Long, uid: String): Boolean {
+        val body = gson.toJson(
+            linkedMapOf(
+                "pick_id" to pickId.toString(),
+                "uid" to uid,
+                "created_at" to java.time.Instant.now().toString()
+            )
+        )
+        return connection(
+            "link_reports", "POST", body, prefer = "resolution=ignore-duplicates,return=minimal"
+        ) != null
+    }
+
+    /** 全量举报列表（网站同款 limit 5000）；网络失败返回 null（调用方保留旧值渲染）。 */
+    fun fetchDeadReports(): List<DeadReport>? {
+        val body = connection("link_reports?select=pick_id,uid&limit=5000", "GET") ?: return null
+        return try {
+            val type = object : TypeToken<List<Map<String, Any>>>() {}.type
+            val rows: List<Map<String, Any>> = gson.fromJson(body, type) ?: return emptyList()
+            rows.map {
+                DeadReport((it["pick_id"] ?: "").toString(), (it["uid"] ?: "").toString())
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Rating = read ratings back, append, PATCH whole array (contract §6). */
     fun rate(id: Long, score: Int): Boolean {        val rowsBody = connection("community_picks?id=eq.$id&select=ratings", "GET") ?: return false
         val ratings = try {
