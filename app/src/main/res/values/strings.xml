@@ -132,6 +132,10 @@
     <string name="relax_title_optional_hint">Title (leave empty to fetch automatically)</string>
     <string name="relax_unnamed_fmt">Untitled · %s</string>
     <string name="relax_edit">Edit</string>
+    <string name="relax_action_rate">★ Rate</string>
+    <string name="relax_favorite_add">Save to My favorites</string>
+    <string name="relax_already_in_favorites">Already in My favorites</string>
+    <string name="relax_favorite_done">Saved to My favorites</string>
     <string name="relax_sample_badge">[Sample] </string>
     <string name="relax_import_data">Import</string>
     <string name="relax_export_data">Export</string>

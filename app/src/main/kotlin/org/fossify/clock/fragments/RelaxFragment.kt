@@ -200,7 +200,7 @@ class RelaxFragment : Fragment() {
             PicksRepository.getPicks(requireContext())
                 .filter { selectedType == InsomniaTypes.KEY_ALL || it.type == selectedType }
                 .forEach { item ->
-                    addItemRow(item, deletable = false)
+                    addItemRow(item, deletable = false, favoriteOnLongPress = true)
                 }
             addSectionLabel(getString(R.string.community_label))
             val communityPicks = RelaxStore.getCommunityPicks(requireContext())
@@ -269,7 +269,7 @@ class RelaxFragment : Fragment() {
         binding.relaxHolder.addView(label)
     }
 
-    private fun addItemRow(item: RelaxItem, deletable: Boolean) {
+    private fun addItemRow(item: RelaxItem, deletable: Boolean, favoriteOnLongPress: Boolean = false) {
         val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
         ) as LinearLayout
@@ -296,6 +296,13 @@ class RelaxFragment : Fragment() {
 
         row.setOnClickListener {
             openItem(item)
+        }
+
+        if (favoriteOnLongPress) {
+            row.setOnLongClickListener {
+                favoriteFromPick(item.title, item.url)
+                true
+            }
         }
 
         if (deletable) {
@@ -410,6 +417,7 @@ class RelaxFragment : Fragment() {
         dialog.show()
     }
 
+    /** Long-press on a community pick: rate it or save it to My favorites. */
     private fun addCommunityRow(pick: CommunityPick) {
         val row = LayoutInflater.from(requireContext()).inflate(
             R.layout.item_relax, binding.relaxHolder, false
@@ -435,11 +443,35 @@ class RelaxFragment : Fragment() {
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }
         row.setOnLongClickListener {
-            showRateDialog(pick)
+            val options = arrayOf(
+                getString(R.string.relax_action_rate),
+                getString(R.string.relax_favorite_add)
+            )
+            requireActivity().getAlertDialogBuilder()
+                .setTitle(pick.title)
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> showRateDialog(pick)
+                        1 -> favoriteFromPick(pick.title, pick.url)
+                    }
+                }
+                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                .show()
             true
         }
 
         binding.relaxHolder.addView(row)
+    }
+
+    /** Shared "save to My favorites" action behind both pick lists; urlKey
+     *  dedup keeps entries from duplicating (aligned with the website). */
+    private fun favoriteFromPick(title: String, url: String) {
+        if (RelaxStore.isUrlFavorited(requireContext(), url)) {
+            requireContext().toast(R.string.relax_already_in_favorites)
+            return
+        }
+        RelaxStore.addCustomItem(requireContext(), title, url)
+        requireContext().toast(R.string.relax_favorite_done)
     }
 
     private fun showRateDialog(pick: CommunityPick) {
@@ -730,6 +762,10 @@ class RelaxFragment : Fragment() {
             okButton.setOnClickListener {
                 val url = RelaxStore.normalizeUrl(urlInput.text.toString())
                 if (!RelaxStore.isValidUrl(url)) {
+                    return@setOnClickListener
+                }
+                if (RelaxStore.isUrlFavorited(requireContext(), url)) {
+                    requireContext().toast(R.string.relax_already_in_favorites)
                     return@setOnClickListener
                 }
                 val host = try {

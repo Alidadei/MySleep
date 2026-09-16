@@ -72,6 +72,43 @@ object RelaxStore {
         ),
     )
 
+    /**
+     * Cross-platform dedup key, aligned verbatim with the website's urlKey()
+     * (cyberSleepCommunity/index.html): normalizeUrl → host minus "www."
+     * (lowercased, default port dropped) → path minus trailing slashes →
+     * keep query, drop fragment. Unparseable input degrades to trimmed
+     * lowercase original, same as the JS catch branch.
+     */
+    fun urlKey(url: String): String {
+        val normalized = normalizeUrl(url)
+        return try {
+            val uri = normalized.toUri()
+            if (uri.host.isNullOrBlank()) return normalized.trim().lowercase()
+            var host = uri.host!!.lowercase().removePrefix("www.")
+            val port = uri.port
+            val defaultPort = when (uri.scheme?.lowercase()) {
+                "https" -> 443
+                "http" -> 80
+                else -> -1
+            }
+            if (port != -1 && port != defaultPort) {
+                host += ":$port"
+            }
+            val path = (uri.path ?: "").replace(Regex("/+$"), "")
+            val encodedQuery: String? = uri.encodedQuery
+            val query = if (encodedQuery != null) "?$encodedQuery" else ""
+            host + path + query
+        } catch (e: Exception) {
+            normalized.trim().lowercase()
+        }
+    }
+
+    /** True when a favorite with the same urlKey already exists. */
+    fun isUrlFavorited(context: Context, url: String): Boolean {
+        val key = urlKey(url)
+        return getCustomItems(context).any { urlKey(it.url) == key }
+    }
+
     fun getCustomItems(context: Context): MutableList<RelaxItem> {
         val json = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_CUSTOM_ITEMS, null) ?: return mutableListOf()
@@ -114,14 +151,14 @@ object RelaxStore {
         }
     }
 
-    /** Merge imported favorites (same ids or same urls are skipped). Returns added count. */
+    /** Merge imported favorites (same ids or same urlKeys are skipped). Returns added count. */
     fun mergeCustomItems(context: Context, imported: List<RelaxItem>): Int {
         val items = getCustomItems(context)
         val knownIds = items.map { it.id }.toSet()
-        val knownUrls = items.map { it.url }.toSet()
+        val knownUrlKeys = items.map { urlKey(it.url) }.toSet()
         val fresh = imported.filter {
             it.title.isNotBlank() && it.url.isNotBlank() &&
-                it.id !in knownIds && it.url !in knownUrls
+                it.id !in knownIds && urlKey(it.url) !in knownUrlKeys
         }
         if (fresh.isNotEmpty()) {
             saveItems(context, items + fresh)
@@ -129,14 +166,14 @@ object RelaxStore {
         return fresh.size
     }
 
-    /** Merge imported community picks (same ids or same urls skipped). Returns added count. */
+    /** Merge imported community picks (same ids or same urlKeys skipped). Returns added count. */
     fun mergeCommunityPicks(context: Context, imported: List<CommunityPick>): Int {
         val picks = getCommunityPicks(context)
         val knownIds = picks.map { it.id }.toSet()
-        val knownUrls = picks.map { it.url }.toSet()
+        val knownUrlKeys = picks.map { urlKey(it.url) }.toSet()
         val fresh = imported.filter {
             it.title.isNotBlank() && it.url.isNotBlank() &&
-                it.id !in knownIds && it.url !in knownUrls
+                it.id !in knownIds && urlKey(it.url) !in knownUrlKeys
         }
         if (fresh.isNotEmpty()) {
             saveCommunityPicks(context, picks + fresh)

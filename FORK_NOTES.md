@@ -197,6 +197,19 @@ Android Studio 直接打开本目录即可（minSdk 26）。应用名：睡眠�
 - 默认英文文案 "Import data/Export data" → "Import/Export"（中文"导入数据/导出数据"不变），
   四个按钮（收藏/社区推荐标题行 + 夜话页）全部加 maxLines=1 兜底防切行
 
+## v1.3.6 英文模式（i18n）全面排查
+- **兜底响铃页**（RingOverlayHelper）全部 UI 文案抽 strings：停止/贪睡 N 分钟/
+  右滑关闭标语/副标题/拦截提示——此前英文用户会在锁屏响铃页看到整页中文
+- **AdGuard 拦截原因**从硬编码中文改为 reason code（contact/strong/weak），
+  toast 由调用方用资源渲染（"Suspicious contact info…"/"疑似联系方式…"）
+- **示例评分结构化**：relax_picks.json 的 sampleRating 字符串改为
+  sampleRatingAvg(double)+sampleRatingCount(int)，UI 用既有 community_rating_fmt
+  渲染（英文 "★ 4.7 · 215 ratings" / 中文 "…次评价"）；网站 BUILTIN 同步
+- MiuiHelper op 状态 "默认"→"default"；英文副标题 night_talk_subtitle 去除中文混排
+- **有意保留中文**（设计特性而非缺陷）：夜话语料（承天寺典故内容）、十二时辰、
+  默认昵称"未寝人####"、AdGuard 词表（拦截对象本就是中文广告话术）、
+  RingDiagnostics 排障日志（面向排障场景）
+
 ## 可靠性说明（重要）
 - **完全关机（长按电源键关机）后，任何第三方 APP 都无法被唤醒**——RTC 硬件闹钟只有
   厂商系统级时钟可用，这是硬件/系统层限制。可用的替代：部分机型自带"定时开机"；

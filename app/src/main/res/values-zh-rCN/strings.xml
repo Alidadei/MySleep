@@ -126,6 +126,10 @@
     <string name="relax_title_optional_hint">标题（留空自动获取）</string>
     <string name="relax_unnamed_fmt">未命名 · %s</string>
     <string name="relax_edit">编辑</string>
+    <string name="relax_action_rate">★ 评分</string>
+    <string name="relax_favorite_add">收藏到我的收藏</string>
+    <string name="relax_already_in_favorites">已在收藏中</string>
+    <string name="relax_favorite_done">已收藏</string>
     <string name="relax_sample_badge">【样例】</string>
     <string name="relax_import_data">导入数据</string>
     <string name="relax_export_data">导出数据</string>
