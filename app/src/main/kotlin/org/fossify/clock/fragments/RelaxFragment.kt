@@ -115,6 +115,9 @@ class RelaxFragment : Fragment(), TimeThemeAware {
         }
 
         binding.relaxBack.setOnClickListener { showHub() }
+        binding.relaxProfileEntry.setOnClickListener {
+            org.fossify.clock.helpers.ProfileDialogs.show(requireActivity())
+        }
         binding.relaxAddFavorite.setOnClickListener { showAddChoiceDialog() }
         binding.relaxRecommend.setOnClickListener { showRecommendDialog() }
         binding.relaxImportData.setOnClickListener {
@@ -201,6 +204,7 @@ class RelaxFragment : Fragment(), TimeThemeAware {
         binding.relaxImportData.setTextColor(theme.sub)
         binding.relaxExportData.setTextColor(theme.sub)
         binding.relaxEmptyCustom.setTextColor(theme.sub)
+        binding.relaxProfileEntry.setTextColor(theme.accent)
 
         // Material 按钮对齐暮紫（可交互=暮紫）
         val actTint = android.content.res.ColorStateList.valueOf(theme.act)

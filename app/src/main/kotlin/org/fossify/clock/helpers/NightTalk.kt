@@ -24,7 +24,11 @@ object NightTalk {
         var insomniaType: String? = null,
         var birthYear: Int = 0,
         var birthMonth: Int = 0,
-        var birthDay: Int = 0
+        var birthDay: Int = 0,
+        // 研究画像字段（与网站 user_profiles 契约同键值：60s/70s/...、male/female、bachelor/...）
+        var ageGroup: String = "prefer_not",
+        var gender: String = "prefer_not",
+        var education: String = "prefer_not"
     )
 
     data class NightNote(
@@ -37,6 +41,7 @@ object NightTalk {
     private const val PREFS = "night_talk"
     private const val KEY_PROFILE = "profile_json"
     private const val KEY_NOTES = "notes_json"
+    private const val KEY_UID = "anon_uid"
 
     // ---- profile ----
 
@@ -55,6 +60,17 @@ object NightTalk {
             .edit()
             .putString(KEY_PROFILE, Gson().toJson(profile))
             .apply()
+    }
+
+    /** 匿名设备标识（网站同款格式：u + base36 时间戳 + 随机尾缀），首次生成后固定，画像 upsert 主键 */
+    fun getUid(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.getString(KEY_UID, null)?.let { return it }
+        val alphabet = ('a'..'z') + ('0'..'9')
+        val uid = "u" + java.lang.Long.toString(System.currentTimeMillis(), 36) +
+            (1..8).map { alphabet.random() }.joinToString("")
+        prefs.edit().putString(KEY_UID, uid).apply()
+        return uid
     }
 
     private fun defaultProfile(): SleepProfile =

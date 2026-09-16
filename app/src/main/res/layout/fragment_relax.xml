@@ -19,6 +19,23 @@
             android:paddingEnd="16dp"
             android:paddingBottom="24dp">
 
+            <!-- 顶栏：右侧「填写用户信息」入口（夜话画像共用卡片） -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/relax_profile_entry"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
+                    android:text="@string/relax_profile_entry"
+                    android:textColor="@color/color_accent"
+                    android:textSize="13sp" />
+            </FrameLayout>
+
             <!-- 品牌区：夜月昼日 + 手写体品牌 + 渐变短线 + 楷体副标题（复刻网站 .brand） -->
             <LinearLayout
                 android:id="@+id/relax_brand"

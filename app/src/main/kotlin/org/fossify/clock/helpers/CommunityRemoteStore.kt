@@ -27,7 +27,9 @@ object CommunityRemoteStore {
 
     private val gson = Gson()
 
-    private fun connection(path: String, method: String, body: String? = null): String? {
+    private fun connection(
+        path: String, method: String, body: String? = null, prefer: String? = null
+    ): String? {
         var conn: HttpURLConnection? = null
         return try {
             conn = (URL(REST + path)).openConnection() as HttpURLConnection
@@ -37,6 +39,9 @@ object CommunityRemoteStore {
             conn.setRequestProperty("apikey", ANON_KEY)
             conn.setRequestProperty("Authorization", "Bearer $ANON_KEY")
             conn.setRequestProperty("Content-Type", "application/json")
+            if (prefer != null) {
+                conn.setRequestProperty("Prefer", prefer)
+            }
             if (body != null) {
                 conn.doOutput = true
                 conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
@@ -117,9 +122,28 @@ object CommunityRemoteStore {
         }
     }
 
+    /**
+     * 匿名研究画像 upsert（对齐网站 SupabaseStore.saveProfile）：
+     * user_id 主键 + Prefer merge-duplicates；键值契约同网站（60s/00s、male/female、bachelor/other，
+     * 未填项 prefer_not）。阻塞网络调用，调用方自行放后台线程；失败静默返回 false。
+     */
+    fun upsertProfile(
+        uid: String, nickname: String, ageGroup: String, gender: String, education: String
+    ): Boolean {
+        val row = linkedMapOf(
+            "user_id" to uid,
+            "nickname" to nickname,
+            "age_group" to ageGroup,
+            "gender" to gender,
+            "education" to education
+        )
+        return connection(
+            "user_profiles", "POST", gson.toJson(row), prefer = "resolution=merge-duplicates"
+        ) != null
+    }
+
     /** Rating = read ratings back, append, PATCH whole array (contract §6). */
-    fun rate(id: Long, score: Int): Boolean {
-        val rowsBody = connection("community_picks?id=eq.$id&select=ratings", "GET") ?: return false
+    fun rate(id: Long, score: Int): Boolean {        val rowsBody = connection("community_picks?id=eq.$id&select=ratings", "GET") ?: return false
         val ratings = try {
             val type = object : TypeToken<List<Map<String, Any>>>() {}.type
             val rows: List<Map<String, Any>> = gson.fromJson(rowsBody, type) ?: return false
