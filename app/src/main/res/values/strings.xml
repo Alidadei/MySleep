@@ -187,6 +187,9 @@
     <string name="night_talk_profile_label">Sleep profile</string>
     <string name="night_talk_type_unset">type unknown</string>
     <string name="relax_profile_entry">User info</string>
+    <string name="dead_report_title">Report dead link</string>
+    <string name="dead_report_message">Is this link broken or no longer available? Confirm to report it — once several visitors report the same link, the item gets marked for everyone. One report per link per person.</string>
+    <string name="dead_report_confirm">Confirm report</string>
     <string name="dead_report_tip">Link dead? Report it</string>
     <string name="dead_reported">Feedback received (duplicates counted once)</string>
     <string name="dead_report_fail">Failed to report, try again later</string>

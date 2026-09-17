@@ -583,22 +583,32 @@ class RelaxFragment : Fragment(), TimeThemeAware {
         deadBtn.setOnClickListener {
             val (_, me) = deadInfo(pick.id)
             if (me) return@setOnClickListener
-            deadBtn.isEnabled = false
-            ensureBackgroundThread {
-                val uid = NightTalk.getUid(requireContext())
-                val ok = CommunityRemoteStore.reportDead(pick.id, uid)
-                activity?.runOnUiThread {
-                    if (!isAdded) return@runOnUiThread
-                    deadBtn.isEnabled = true
-                    if (ok) {
-                        deadReports.add(CommunityRemoteStore.DeadReport(pick.id.toString(), uid))
-                        requireContext().toast(R.string.dead_reported)
-                    } else {
-                        requireContext().toast(R.string.dead_report_fail)
+            // 先弹说明浮窗，确认后才提交（避免误触直接上报）
+            requireActivity().getAlertDialogBuilder()
+                .setTitle(R.string.dead_report_title)
+                .setMessage(R.string.dead_report_message)
+                .setPositiveButton(R.string.dead_report_confirm) { _, _ ->
+                    deadBtn.isEnabled = false
+                    ensureBackgroundThread {
+                        val uid = NightTalk.getUid(requireContext())
+                        val ok = CommunityRemoteStore.reportDead(pick.id, uid)
+                        activity?.runOnUiThread {
+                            if (!isAdded) return@runOnUiThread
+                            deadBtn.isEnabled = true
+                            if (ok) {
+                                deadReports.add(
+                                    CommunityRemoteStore.DeadReport(pick.id.toString(), uid)
+                                )
+                                requireContext().toast(R.string.dead_reported)
+                            } else {
+                                requireContext().toast(R.string.dead_report_fail)
+                            }
+                            refreshDead()
+                        }
                     }
-                    refreshDead()
                 }
-            }
+                .setNegativeButton(org.fossify.commons.R.string.cancel, null)
+                .show()
         }
 
         row.setOnClickListener { openItem(RelaxItem(pick.id, pick.title, pick.url)) }

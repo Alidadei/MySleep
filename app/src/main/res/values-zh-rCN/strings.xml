@@ -181,6 +181,9 @@
     <string name="night_talk_profile_label">睡眠画像</string>
     <string name="night_talk_type_unset">类型未定</string>
     <string name="relax_profile_entry">填写用户信息</string>
+    <string name="dead_report_title">反馈链接失效</string>
+    <string name="dead_report_message">这个链接打不开或内容已失效？确认后替大家反馈一条；同一链接有多人反馈时会标灰提醒，每人每条只计一次。</string>
+    <string name="dead_report_confirm">确认反馈</string>
     <string name="dead_report_tip">链接打不开？报告失效</string>
     <string name="dead_reported">已收到反馈（重复只计一次）</string>
     <string name="dead_report_fail">上报失败，请稍后再试</string>
